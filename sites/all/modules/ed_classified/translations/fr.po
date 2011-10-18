@@ -1,0 +1,449 @@
+# $Id: fr.po,v 1.1.2.2 2009/04/15 09:59:58 slybud Exp $
+#
+# French translation of Drupal (general)
+# Copyright YEAR NAME <EMAIL@ADDRESS>
+# Generated from files:
+#  ed_classified_delete.inc: n/a
+#  ed_classified_notifications.inc: n/a
+#  ed_classified_settings.inc,v 1.1.2.1.4.1 2008/08/11 01:15:44 inactivist
+#  ed_classified_themefuncs.inc,v 1.1.2.1.4.1 2008/08/11 01:15:44 inactivist
+#  ed_classified_utils.inc,v 1.1.2.2.4.1 2008/08/11 01:15:44 inactivist
+#  ed_classified.module,v 1.1.4.45.2.2 2008/08/11 05:57:04 inactivist
+#  ed_classified.install: n/a
+#  ed_classified_views.inc,v 1.1.2.1 2007/08/12 08:00:29 inactivist
+#  ed_classified.info: n/a
+#
+msgid ""
+msgstr ""
+"Project-Id-Version: french translation for drupal6 ed_classified module\n"
+"POT-Creation-Date: 2009-04-15 10:50+0200\n"
+"PO-Revision-Date: 2009-04-15 11:04+0100\n"
+"Last-Translator: Sylvain Moreau <sylvain.moreau@ows.fr>\n"
+"Language-Team: Sylvain Moreau, OWS <sylvain.moreau@ows.fr>\n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=utf-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"Plural-Forms: nplurals=2; plural=(n!=1);\n"
+
+#: ed_classified_delete.inc:24
+msgid "Unpublished ad nid=%nid"
+msgstr "nid de l'annonce non  publiée =%nid"
+
+#: ed_classified_delete.inc:24
+msgid "View ad"
+msgstr "Voir l'annonce"
+
+#: ed_classified_delete.inc:59
+msgid "Purged %d ads expired between %s and %s"
+msgstr "Les annonces expirées entre %s et %s ont été purgées"
+
+#: ed_classified_delete.inc:70
+msgid "Purging ad @title (nid=!nid) which @expired"
+msgstr "Purge de l'annonce @title (nid=!nid) qui est @expired"
+
+#: ed_classified_notifications.inc:51
+msgid "Processing notification emails for ads expiring soon (between now and !date)"
+msgstr "Traitement des alerte e-mails pour les annonces expirant bientôt (entre maintenant et !date)"
+
+#: ed_classified_notifications.inc:61
+msgid "Unable to send ad expiration reminder email to user #!uid"
+msgstr "Impossible d'envoyer une alerte e-mail d'expiration à l'utilisateur #!uid"
+
+#: ed_classified_notifications.inc:65
+msgid "Unable to load user !uid"
+msgstr "Impossible de charger l'utilisateur !uid"
+
+#: ed_classified_settings.inc:32
+msgid "Ad Duration and Expiration"
+msgstr "Durée et expiration des annonces"
+
+#: ed_classified_settings.inc:34
+msgid "New ad default duration (days)"
+msgstr "Durée par défaut des nouvelles annonces (en jours)"
+
+#: ed_classified_settings.inc:34
+msgid "Ads will auto-expire this many days after the ad is created, unless you override this on a per-category basis (see below.).  Requires cron."
+msgstr "Les annonces expireront automatiquement passé ce nombre de jour après avoir été créées, sauf si vous surchargez cela via les catégories (voir ci-dessous). Nécessite une tâche planifiée."
+
+#: ed_classified_settings.inc:36
+msgid "Expired ad deletion grace period"
+msgstr "Période de grâce avant suppression de l'annonce expirée"
+
+#: ed_classified_settings.inc:36
+msgid "Expired ads are subject to purging (deletion) this many days after expiration."
+msgstr "Les annonces expirées seront supprimées après ce nombre de jours."
+
+#: ed_classified_settings.inc:43
+msgid "Ad Expiration Notifications"
+msgstr "Alerte d'expiration des annonces"
+
+#: ed_classified_settings.inc:45
+msgid "Send email reminders"
+msgstr "Envoyer des pense bête par e-mail"
+
+#: ed_classified_settings.inc:45
+msgid "Send reminder emails to advertisers (using the specified templates) periodically if they have ads expiring within the warning period defined below."
+msgstr "Envoyer régulièrement des e-mails d'alerte aux personnes ayant publié des annonces expirant au cours de la période définie ci-dessous."
+
+#: ed_classified_settings.inc:46
+msgid "Days before expiration to send reminder emails"
+msgstr "Nombre de jours avant l'expiration, pour envoyer une alerte e-mail"
+
+#: ed_classified_settings.inc:51
+msgid "Notification messages"
+msgstr "Messages d'alerte"
+
+#: ed_classified_settings.inc:52
+msgid "Substitution variables: !sitename = your website name, !siteurl = your site's base URL, !user_ads_url = link to user's classified ads list."
+msgstr "Variables de substitution : !sitename = le nom de votre site, !siteurl = URL de base de votre site, !user_ads_url = lien pointant vers la liste des Petites Annonces de l'utilisateur."
+
+#: ed_classified_settings.inc:57
+msgid "Expiration reminder email subject"
+msgstr "Sujet de l'e-mail d'alerte d'expiration"
+
+#: ed_classified_settings.inc:60
+msgid "Expiration reminder email body"
+msgstr "Corps de l'e-mail d'alerte d'expiration"
+
+#: ed_classified_settings.inc:66
+msgid "Ad Content Policy"
+msgstr "Politique de contenu des annonces"
+
+#: ed_classified_settings.inc:68
+msgid "Body length limit for standard ads"
+msgstr "Limite de longueur du corps des annonces standard"
+
+#: ed_classified_settings.inc:68
+msgid "Maximum characters to allow in classified ad body."
+msgstr "Nombre maximum de caractères autorisés pour le corps d'une Petite Annonce."
+
+#: ed_classified_settings.inc:70
+msgid "Show contact link on classified ad posts"
+msgstr "Afficher le lien de contact dans les post de l'Petite Annonce"
+
+#: ed_classified_settings.inc:70
+msgid "Provide contact link in classified ad links.  Not necessary if you provide an alternative method of contacting advertisers, such as the privatemsg module)."
+msgstr "Fourni un lien \"Contact\" dans les Petites Annonces. Pas nécessaire si vous utilisez une méthode alternative telle que les messages privés (module  privatemsg par exemple)."
+
+#: ed_classified_settings.inc:76
+msgid "File Attachment Enhancements"
+msgstr "Améliorations de la pièce jointe"
+
+#: ed_classified_settings.inc:79
+msgid "Alter classified ad create/edit form file attachment text"
+msgstr "Modifier le texte du formulaire de création/modification de pièce jointe"
+
+#: ed_classified_settings.inc:79
+msgid "If selected, this option will enhance classified node edit forms where attachments are enabled - altering form behavior to help users with attaching an image."
+msgstr "Si coché, cette option améliorera le formulaire de gestion des pièces jointes. Le comportement du formulaire sera modifié pour aider les utilisateurs à attacher une image."
+
+#: ed_classified_settings.inc:81
+msgid "File attachment description text"
+msgstr "Texte de description de la pièce jointe"
+
+#: ed_classified_settings.inc:81
+msgid "If you choose to alter the file attachment form behavior, this text will be shown."
+msgstr "Si vous choisissez de modifier le comportement du formulaire  de pièce jointe, ce texte sera affiché."
+
+#: ed_classified_settings.inc:87
+msgid "Taxonomy-dependent settings"
+msgstr "Paramètres des termes des taxinomies"
+
+#: ed_classified_settings.inc:88
+msgid "Ad duration, in days, for the ads created in each category.  Ads expire this many days after creation in this category - note that changing the category after creation will not change the expiration date unless the author resets the expiration.  Ads assigned more than one category at the time of creation or editing receive the maximum duration found in all assigned categories. "
+msgstr "Durée de l'annonce, en jours, pour les annonces créées dans chaque catégorie. Les annonces expirent passé ce nombre de jours après avoir été créées dans cette catégorie. Notez que changer cette catégorie après création ne changera pas la date d'expiration sauf si l'auteur remet à zéro l'expiration. La durée des Petites Annonces dans plus d'une catégorie au moment de la création ou de la modification sera la durée la pus longue parmis toutes les catégories où est classée l'annonce."
+
+#: ed_classified_settings.inc:100
+msgid "Ad duration for Category '@name'"
+msgstr "Durée de l'annonce pour la catégorie '@name'"
+
+#: ed_classified_themefuncs.inc:54;136
+#: ed_classified_utils.inc:281
+msgid " ago"
+msgstr "ago"
+
+#: ed_classified_themefuncs.inc:78
+#: ed_classified.module:388
+msgid "Create a new ad"
+msgstr "Créer une nouvelle annonce"
+
+#: ed_classified_themefuncs.inc:135
+msgid "Latest ad: "
+msgstr "Dernière annonce : "
+
+#: ed_classified_themefuncs.inc:136;175
+msgid "Created on "
+msgstr "Créée le "
+
+#: ed_classified_themefuncs.inc:142
+msgid "  Last updated: !date"
+msgstr "Dernière mise à jour : !date"
+
+#: ed_classified_themefuncs.inc:173
+msgid "Posted by: !name"
+msgstr "Postée par : !name"
+
+#: ed_classified_themefuncs.inc:207
+msgid "!adcount ads total."
+msgstr "!adcount annonces sur Seronet"
+
+#: ed_classified_themefuncs.inc:208
+msgid "!ads_today ads in last 24 hours."
+msgstr "!ads_today annonces dans les dernières 24 heures"
+
+#: ed_classified_themefuncs.inc:102
+msgid "There is @count ad in this category"
+msgid_plural "There are @count ads in this category"
+msgstr[0] "Il y a @count annonces dans cette catégorie. "
+msgstr[1] "Il y a @count annonces dans cette catégorie."
+
+#: ed_classified_utils.inc:245
+msgid "<div class=\"error\">It appears that you have not configured any vocabulary terms to be used with the Classified Ads module.  This module will not function correctly until you define vocabulary terms for vocabulary id !vid.  Please visit !url to add terms such as \"For Sale\" or \"Wanted\" (or other categories as appropriate for your needs).</div>"
+msgstr "<div class=\"error\">Il semble que vous n'ayiez pas configuré de termes de vocabulaire à utiliser avec le module Classified Ads. Ce module ne fonctionnera pas correctement jusqu'à ce que vous définissiez des termes de vocabulaire pour l'id de vocabulaire !vid. Veuillez visiter !url pour ajouter des termes tels que \"A Vendre\" ou \"Recherche\" (ou d'autres catégories adaptées à vos besoins).</div>"
+
+#: ed_classified_utils.inc:250
+msgid "<div class=\"error\">The classified ads vocabulary settings are not configured correctly.  This is mostly likely due to a failed installation or an administrator deleting the automatically configured taxonomy or other problems.  Please visit the online handbook page(s) at !url.</div>"
+msgstr "<div class=\"error\">Les paramètres de vocabulaire des petittes annonces ne sont pas correctement configurés. Ceci est probablement dûe à un échec d'installation, à une suppression pas l'administrateur de la taxononomie configurée automatiquement, ou à d'autres problèmes. Veuillez visiter les pages du manuel en ligne à l'adresse !url</div>"
+
+#: ed_classified_utils.inc:264
+msgid "Drupal classified ads by Exodus Development, Inc."
+msgstr "Module de petites annonces pour Drupal par Exodus Development, Inc."
+
+#: ed_classified_utils.inc:278
+msgid "%s on %s (%s%s)"
+msgstr "%s le %s (%s%s)"
+
+#: ed_classified_utils.inc:279
+#: ed_classified.module:371
+msgid "expired"
+msgstr "Annonce expirée "
+
+#: ed_classified_utils.inc:279
+msgid "expires"
+msgstr "expire"
+
+#: ed_classified_utils.inc:313
+msgid " Category"
+msgstr " Catégorie"
+
+#: ed_classified_utils.inc:314
+#: ed_classified.install:35
+msgid "Vocabulary required by Classified Ads (ed_classified) module.  <strong>Warning:  You should not delete this vocabulary unless you intend to uninstall (or have already uninstalled) the Classified Ads module.</strong>"
+msgstr "Vocabulaire nécessaire au module Classified Ads (ed_classified). <strong>Attention : vous ne devez pas supprimer ce vocabulaire sauf si vous avez prévu de désinstaller (ou avez déjà désisnstallé) le module Classified Ads.</strong>"
+
+#: ed_classified_views.inc:36
+msgid "!modulename: Ad Expiration"
+msgstr "!modulename: Expiration de l'annonce"
+
+#: ed_classified_views.inc:40
+msgid "!modulename: Ad Expiration delta from current time"
+msgstr "!modulename : Delta d'expiration par rapport à aujourd'hui"
+
+#: ed_classified.module:74
+msgid "@name - Popular (requires access log enabled)"
+msgstr "@name - Populaire (nécessite d'activer les logs d'accès)"
+
+#: ed_classified.module:75
+msgid "@name - Latest"
+msgstr "@name - Dernières"
+
+#: ed_classified.module:76
+msgid "@name - Stats"
+msgstr "@name - Stats"
+
+#: ed_classified.module:89
+msgid "Popular @name"
+msgstr "Les Annonces les plus populaires"
+
+#: ed_classified.module:93
+msgid "Latest @name"
+msgstr "Dernières Petites Annonces"
+
+#: ed_classified.module:98
+msgid "@name Statistics"
+msgstr "Statistiques des Petites Annonces"
+
+#: ed_classified.module:148
+msgid "Photo Attachments"
+msgstr "Photos jointes"
+
+#: ed_classified.module:162
+msgid "You can manage current @name using this page."
+msgstr "Vous pouvez gérer @name courant en utilisant cette page."
+
+#: ed_classified.module:164
+msgid "@name module"
+msgstr "module @name"
+
+#: ed_classified.module:166
+msgid "Create a @name."
+msgstr "Créer une @name."
+
+#: ed_classified.module:183
+msgid "View the advertiser's (@advertiser) profile."
+msgstr "Voir le profil de la personne passant l'annonce (@advertiser)."
+
+#: ed_classified.module:193
+msgid "Suggest a new category"
+msgstr "Suggérer une nouvelle catégorie"
+
+#: ed_classified.module:195
+msgid "Click here to suggest a new classified ad category"
+msgstr "Cliquez ici pour suggérer une nouvelle catégorie d'Petite Annonce"
+
+#: ed_classified.module:219
+msgid "View other ads like this one in the '!cat' category."
+msgstr "Voir d'autres annonces comme celle-ci dans la catégorie '!cat'."
+
+#: ed_classified.module:331
+msgid "Title"
+msgstr "Titre"
+
+#: ed_classified.module:333
+msgid "Created"
+msgstr "Créé"
+
+#: ed_classified.module:334
+msgid "Published?"
+msgstr "Publiée ?"
+
+#: ed_classified.module:335
+msgid "Expires"
+msgstr "Expire le"
+
+#: ed_classified.module:337
+msgid "Total"
+msgstr "Total"
+
+#: ed_classified.module:338
+msgid "Recent"
+msgstr "Récent"
+
+#: ed_classified.module:341
+msgid "Edit"
+msgstr "Éditer"
+
+#: ed_classified.module:370
+msgid "yes"
+msgstr "oui"
+
+#: ed_classified.module:370
+msgid "no"
+msgstr "non"
+
+#: ed_classified.module:371
+msgid " (!expire_interval)"
+msgstr " (!expire_interval)"
+
+#: ed_classified.module:390
+msgid "Click here to create a new Classified Ad."
+msgstr "Cliquez ici pour créér une nouvelle Petite Annonce."
+
+#: ed_classified.module:397
+msgid "Purge old expired ads"
+msgstr "Purger les anciennes annonces expirées"
+
+#: ed_classified.module:399
+msgid "Delete ads that are !days days old, marked expired and unpublished."
+msgstr "Supprimer les annonces vieilles de §days jours, marquées comme expirées et dépubliées."
+
+#: ed_classified.module:508
+msgid "The main body text of your ad.  Please note that ads are limited to !limit characters or less."
+msgstr "Le texte principal de votre annonce. Veuillez noter que les annonces sont limitées à !limit caractères ou moins."
+
+#: ed_classified.module:523
+msgid "Body characters used: <span id=\"_edi_classified_body_length_remaining\">%initial_value</span> of %max_value"
+msgstr "Nombre de caractères utilisés pour le corps de l'annonce : <span id=\"_edi_classified_body_length_remaining\">%initial_value</span> sur %max_value"
+
+#: ed_classified.module:533
+msgid "Ad Expiration"
+msgstr "Date d'expiration de l'annonce"
+
+#: ed_classified.module:541
+msgid "Reset ad expiration (extend expiration date)"
+msgstr "Réinitialiser l'expiration de l'annonce (prolonger la date d'expiration)"
+
+#: ed_classified.module:542
+msgid "If this is checked, the ad's expiration date will be reset upon saving changes.  Duration may depend on assigned categories."
+msgstr "Si vous cochez cette case, la date d'expiration de l'annonce sera réinitialisée lorsque vous sauvegarderez les changements. La durée peut dépendre de la catégorie de l'annonce."
+
+#: ed_classified.module:584
+msgid "Classified Ad"
+msgstr "Petite Annonce"
+
+#: ed_classified.module:586
+msgid "Contains a title, a body, and an administrator-defined expiration date"
+msgstr "Contient un titre, un corps et une date d'expiration définie par l'administarteur."
+
+#: ed_classified.module:588
+msgid "Ad Title"
+msgstr "Titre de l'annonce"
+
+#: ed_classified.module:590
+msgid "Ad Text"
+msgstr "Texte de l'annonce"
+
+#: ed_classified.module:609
+msgid "User %uid attempted to reset ad expiration date on node %nid without proper access permissions - hack attempt?"
+msgstr "L'utilisateur %uid a essayé de remettre à zéro la date d'expiration du noeud %nid sans en avoir le droit - supprimer la tentative ?"
+
+#: ed_classified.module:635
+msgid "Ad expiration extended from %expires_old to %expires_new."
+msgstr "L'expiration de l'annonce est prolongée de %expires_old à %expires_new."
+
+#: ed_classified.module:672
+msgid "Ad text length is limited to !length characters.  Please shorten you entry to !length characters or less."
+msgstr "La longueur du texte de l'annonce est limité à !length caractères. Résumez votre texte en !length caractères ou moins."
+
+#: ed_classified.module:690
+msgid "Home"
+msgstr "Accueil"
+
+#: ed_classified.module:456
+msgid "create classified ads"
+msgstr "créer des petites annonces"
+
+#: ed_classified.module:456
+msgid "edit own classified ads"
+msgstr "modifier mes propres petites annonces"
+
+#: ed_classified.module:456
+msgid "reset classified ad expiration"
+msgstr "remettre à zéro l'expiration de l'annonce"
+
+#: ed_classified.module:456
+msgid "administer classified ads"
+msgstr "gérer les petites annonces"
+
+#: ed_classified.module:271
+msgid "List and manage "
+msgstr "Lister et gérer"
+
+#: ed_classified.module:285
+msgid "purge"
+msgstr "purge"
+
+#: ed_classified.module:293
+msgid "My @name list"
+msgstr "Mes petites annonces"
+
+#: ed_classified.module:0
+msgid "ed_classified"
+msgstr "ed_classified"
+
+#: ed_classified.install:28
+msgid "Creating classified ads taxonomy terms"
+msgstr "En train de créer les termes de la taxinomie des annonces"
+
+#: ed_classified.install:47
+msgid "Install: Classified Ad vocabulary !vid created."
+msgstr "Installation : vocabulaire Petites Annonces !vid créé."
+
+#: ed_classified.info:0
+msgid "Classified Ads"
+msgstr "Classified Ads (Petites Annonces)"
+
+#: ed_classified.info:0
+msgid "Add simple classified ad support to your site.  Development sponsored by <a href="http://exodusdev.com">Exodus Development</a>."
+msgstr "Ajoute à votre site une fonction simple de petites annonces. Développement sponsorisé par <a href=\"http://exodusdev.com\">Exodus Development</a>."
+

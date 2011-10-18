@@ -1,0 +1,56 @@
+#!/bin/bash
+# This is a helper git commit script that will:
+#   - clear all drupal caches and temp files
+#   - dump the database to /drupaldb.sql, overwriting the previous copy
+#   - commit all changes to files, using the -a option
+# 
+
+MESSAGE=""
+PUSH=
+
+while getopts ":p" Option
+do
+  case $Option in
+    p ) PUSH=1 ;;
+  esac
+done
+
+shift $((OPTIND-1))
+
+if [ "$@" ]
+#Test whether command-line argument is present (non-empty).
+then
+  MESSAGE=$@
+else  
+  echo "For now, you must specify a message, or do the commit manually"
+  exit
+fi  
+
+echo "Clearing cache..."
+drush cc all
+
+echo "Dumping database..."
+drush sql-dump --result-file="drupaldb.sql"
+
+echo "Current status:"
+git status
+
+echo -n "Press ENTER to continue and commit, or type 'q' to abort: "
+read cont
+
+if [ "$cont" == "q" ]
+then
+  echo "Aborting commit"
+  exit
+fi
+
+echo "Committing..."
+git commit -a -m "$MESSAGE"
+
+if [ "$PUSH" ]
+then
+  echo "Pushing a copy to remote..."
+  git push origin master
+fi
+
+exit

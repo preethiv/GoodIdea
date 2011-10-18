@@ -1,0 +1,11 @@
+name = "Notifications Lite"
+description = "Extra Simple Notifications API. Enable only when required by other modules."
+package = Notifications
+core = 6.x
+
+; Information added by drupal.org packaging script on 2011-02-25
+version = "6.x-2.x-dev"
+core = "6.x"
+project = "notifications"
+datestamp = "1298619778"
+

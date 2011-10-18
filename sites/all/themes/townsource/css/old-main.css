@@ -1,0 +1,842 @@
+@charset "UTF-8";
+
+/************************************************
+                  Some Reset 
+ ************************************************/
+
+h1, h2, h3, h4, h5, h6,
+p {
+	padding:0;
+	margin:0;
+}
+
+
+
+/************************************************
+                 General Styles 
+ ************************************************/
+
+body {
+	margin:0;
+	padding:0
+}
+
+body {
+  font-family:Arial, Helvetica, sans-serif;
+  font-size:12px;
+  color:#797979;
+  color:#444;
+  background:url(../images/mainBg.jpg) repeat-x top #e9f4fa;
+  padding-top:5px; /* This is required because of some weird thing 960 is doing */
+}
+
+body.admin-menu{
+  margin-top:0px !important;
+}
+
+a {
+  text-decoration:none;
+  color:#009cff;
+}
+
+a:hover {
+  text-decoration:underline;
+}
+
+
+
+/************************************************
+                   Top Menu 
+ ************************************************/
+
+#top-menu {
+  clear:both;
+  height:auto;
+  padding: 0px 0 0 0;
+  text-transform:uppercase;
+}
+
+#top-menu ul{
+  list-style:none;
+}
+
+#top-menu ul li{
+  display:block;
+  float:left;
+}
+
+#top-menu ul li a{
+  float:left;
+  display:block;
+  text-align:center;
+  background:url(../images/topMenuBg.png) repeat-x;
+  line-height:35px;
+  font-size:13px;
+  color:#ffffff;
+  padding:0 15.6px;
+  font-weight:700;
+}
+
+#top-menu ul li a.active,
+#top-menu ul li a:hover{
+  background:#ffffff;
+  color:#009cff;
+  text-decoration:none;
+}
+
+	
+	
+/*************************************************************************
+               Top Menu: Rounded corners implementation
+ **
+ ** this is perhaps not the best way to implement the round corners here,
+ ** but it works for now and I'm leaving it like this. 
+ **
+ *************************************************************************/
+
+#top-menu ul li.first a {
+  background:url(../images/topMenuFirstNrml.png) no-repeat right top;
+  padding:0;
+  height:35px;
+  width:84px;
+}
+
+#top-menu ul li.first a.active,
+#top-menu ul li.first a:hover {
+  background:url(../images/topMenuFirstHvr.png) no-repeat right top;
+}
+
+#top-menu ul li.last a {
+  padding:0;
+  height:35px;
+  width:124px;
+  background:url(../images/topMenuLastNrml.png) no-repeat left top;
+}
+
+#top-menu ul li.last a.active,
+#top-menu ul li.last a:hover {
+  background:url(../images/topMenuLastHvr.png) no-repeat left top;
+}
+
+
+
+/************************************************
+                   Header 
+ ************************************************/
+
+#logo {
+  padding: 32px 0 13px 0;
+}
+
+
+
+/************************************************
+             Top Right Corner Area 
+ ************************************************/
+
+#top-corner-bar {
+	margin: 10px 0 0 0;
+	float:right;
+	background: url(../images/topCornerBg.jpg) repeat-x left top;
+	width:543px !important;
+	height:40px;
+  line-height:17px;
+  text-align:center;
+  font-size:11px;
+  color:#ffffff;
+}
+
+#top-corner-bar a{
+  font-weight:700;
+  color:#ffffff;
+}
+
+#user-top-text-left {
+	float:left;
+	margin-left: 70px;
+}
+#user-top-text-right {
+	float:right;
+	margin-right: 50px;
+}
+
+
+
+/************************************************
+                  Tagline Area 
+ ************************************************/
+
+#under-menu {
+	margin-top:-10px;
+  background:#ffffff;
+}
+#tagline p{
+  color:#0074be;
+  font-weight:700;
+  line-height:38px;
+  text-align:center;
+  font-size:1.1em;
+}
+
+
+
+/************************************************
+                   Search Area 
+ ************************************************/
+
+#search-area {
+  border-left:1px solid #cfcece;
+  border-right:1px solid #cfcece;
+  border-bottom:1px solid #cfcece;
+  background:url(../images/searchBoxRptr.png) repeat-x bottom #ffffff;
+  -moz-border-radius: 3px;
+  border-radius: 0 0 5px 5px;
+}
+
+#search-form {
+	text-align:center;
+	margin: 17px auto;
+}
+
+#search-theme-form #edit-search-theme-form-1 {
+	padding:5px;
+	border-radius: 3px;
+  border: 2px solid #777;
+  font-size:1.1em;
+}
+
+#search-theme-form .form-submit {
+	position:relative;
+	top:8px;
+	left:8px;
+}
+
+#search-theme-form .form-text { 
+	color: #888;
+}
+
+
+
+/************************************************
+                 Content Area 
+ ************************************************/
+
+#content {
+	background:#ffffff;
+  clear:both;
+  margin:0px auto;
+  height:auto;
+  margin-top:5px;
+  border:1px solid #b8e2f6;
+  -moz-border-radius: 10px;
+  border-radius: 10px;
+  padding: 10px 0;
+}
+
+.inner-content {
+  background:#FFFFFF;
+}
+
+/********** Styling for gray boxes around content **********/
+
+#content div.block,
+#content div.view, 
+#content div.content-block {
+  margin:0 0 5px 0;
+  border:1px solid #d8d8d8;
+}
+
+#content div.view div.block,
+#content div.view div.content-block,
+#content div.block div.view,
+#content #right-sidebar div.block div.content-block,
+#content div.content-profile-display {
+	border:none;
+	margin:0;
+	padding:0;
+}
+
+/********** Styling for the gradient block and page titles **********/
+
+#content .view h1,
+#content .block-title h2,
+#content .node-type-name h1 {
+  border-bottom:1px solid #d8d8d8;
+  line-height:30px;
+  font-size:14px;
+  color:#000000;
+  background:#ddd;
+  display:block;
+  padding: 0 0 0 15px;
+  margin:0;
+  background:url(../images/commonGrayBar.png) repeat-x;
+}
+
+#content .view .block-title h2 {
+	margin-top:-26px;
+}
+
+#content div.block h1,
+#content div.content-block h1 {
+  margin:0px;
+}
+
+
+
+/************************************************
+              Right Sidebar Area 
+ ************************************************/
+
+#right-sidebar div.block {
+	background:#c8ecff;
+  border:1px solid #52c9ff;
+  padding:0;
+  margin: 0 0 10px 0;
+}
+
+#right-sidebar .block h2{
+  border-bottom:1px solid #52c9ff;
+  line-height:35px;
+  font-size:18px;
+  color:#0080ff;
+  background:#ffffff;
+  display:block;
+  padding:0 0 0 10px;
+  margin:0;
+}
+
+#right-sidebar .block p {
+	margin: 5px 5px;
+}
+
+#right-sidebar .block .content {
+	margin-top:10px;
+}
+
+#right-sidebar .block ul {
+	margin:0;
+	padding:0;
+}
+
+#right-sidebar .block ul li {
+	display:block;
+	padding: 7px 7px 7px 10px;
+	border-bottom:1px solid #52c9ff;
+	margin:0;
+	font-weight:bold;
+}
+
+#right-sidebar .block ul li:before {
+  content: "\00BB \0020";
+  padding-right:5px;
+}
+
+#right-sidebar .block ul li ul li{
+	margin-left:15px;
+	font-weight:normal;
+}
+
+#right-sidebar .block ul li ul li:before {
+  content:none;
+}
+
+#right-sidebar .block ul li.last {
+  border-bottom:none;
+}
+
+#right-sidebar .block ul li ul li.first .start-collapsed {
+  border-top:1px solid #52c9ff;
+}
+
+
+
+/************************************************
+               Individual Blocks 
+ ************************************************/
+
+/********** Styling for custom Davissource blocks **********/
+
+#block-davissource-connect-flag,
+#block-davissource-interested-flag,
+#block-davissource-submit-article,
+#block-davissource-submit-event,
+#block-davissource-submit-wiki-page,
+#block-davissource-submit-business,
+#block-davissource-submit-promotion,
+#block-davissource-submit-classified {
+	line-height:50px;
+	text-align:center;
+}
+
+#contact-pre,
+#contact-mail-page {
+	margin:10px;
+}
+
+#right-sidebar #block-davissource-our-location,
+#right-sidebar #block-davissource-user-homepage {
+  background: #FFFAEF;
+}
+
+#right-sidebar #block-davissource-our-location h2,
+#right-sidebar #block-davissource-user-homepage h2 {
+  color:#333;
+  border:none;
+  background: none;
+  line-height: 35px;
+  margin-bottom:-10px;
+  border-bottom: solid 1px #ddd;
+}
+
+#right-sidebar #block-davissource-user-homepage div.content {
+  padding-top: 5px;
+}
+
+#right-sidebar #block-davissource-user-homepage #user-links {
+	font-size:.8em;
+	display:block;
+	float:right;
+}
+
+#right-sidebar #block-davissource-user-homepage #user-links a {
+	margin:3px 5px 5px 7px;
+}
+
+/********** Block: Recently Added Users **********/
+
+#right-sidebar #block-views-connected_users-block_1 .views-field-field-image-fid,
+#right-sidebar #block-views-recently_added_users-block_1 .views-field-field-image-fid {
+	padding: 0 4px;
+}
+
+/********** Block: Popular Promotions **********/
+
+#content #main #block-views-popular_promotions-block_1 .field {
+	padding: 1px 0;
+}
+
+/********** Block: Popular Events **********/
+
+#content #main #block-views-popular_events-block_1 .field {
+	padding: 3px 0;
+}
+
+
+
+/************************************************
+                     960 Grid 
+ ************************************************/
+
+/*
+ * the following two fixes are necessary because 960 grid elements do
+ * not work well with borders. For pages where the main area is divided
+ * into more columns, we need to get rid of some margins to leave space
+ * for the borders that surround the main content area.
+ */
+ 
+.grid_12 div.alpha  {
+	margin-right:9px;
+}
+
+.grid_12 div.omega {
+	 margin-left:9px;
+}
+
+.grid_4 div.alpha  {
+  margin-right:9px;
+}
+
+.grid_4 div.omega {
+   margin-left:9px;
+}
+
+
+
+/************************************************
+                  Heartbeat 
+ ************************************************/
+
+.field-ds-message {
+  font-weight:bold;
+  display:inline-block;
+  float:left;
+  margin-right:15px;
+}
+
+.hds-region-header {
+  padding:10px;
+}
+
+.heartbeat-message-block {
+  padding: 5px 0;
+  border-bottom: 1px solid #eee;
+}
+
+.activity-time {
+  color:#888;
+  font-size:.9em;
+  display:inline-block;
+}
+
+
+
+/************************************************
+                     Flag 
+ ************************************************/
+
+.flag-wrapper .message {
+  position: inherit;
+  top:auto;
+  line-height: normal;
+  left: auto;
+  width: auto;
+  font-size:auto;
+  font-weight:bold;
+}
+
+.flag-wrapper.flag-connect span.message,
+.flag-wrapper.flag-interested span.message {
+  display:block;
+  font-size:1.2em;
+  margin-top:20px;
+}
+
+
+
+/************************************************
+                     Views 
+ ************************************************/
+
+/********** Views: Grid views styles **********/
+
+.view tr {
+  display:block;
+  margin-bottom:7px;
+  width:698px;
+}
+
+.view tr.row-first {
+  margin-top:7px;
+}
+
+.view td {
+	vertical-align: top;
+	text-align: center;
+}
+
+.view td:hover {
+  background-color:#eeeeee;
+}
+
+
+/********** Views: 12 column -> 6 column grid views **********/
+
+.view table.views-view-grid.col-6 * {
+	padding: 0;
+}
+
+.view table.views-view-grid.col-6 .nd-region-middle-wrapper {
+	margin-left: 7px;
+	margin-right: 7px;
+}
+
+.view table.views-view-grid.col-6 td.col-first .nd-region-middle-wrapper {
+	margin-left: 14px;
+}
+
+.view table.views-view-grid.col-6 td.col-last .nd-region-middle-wrapper {
+	margin-right: 14px;
+}
+
+.view table.views-view-grid.col-6 td .field-title {
+	padding:0;
+	margin-top:-7px;
+}
+
+.view table.views-view-grid.col-6 td .field-title a {
+	font-size: 1em;
+	font-weight: normal;
+}
+
+/********** Views: Browse page views **********/
+
+.views-exposed-form {
+	border-bottom:1px solid #d8d8d8;
+	padding:10px 0;
+}
+
+.views-exposed-form .views-exposed-widget {
+	float:left;
+	position:relative;
+	left:370px;
+	top:0;
+}
+
+.views-exposed-widget.views-widget-filter-text .views-widget {
+  display:inline-block;
+}
+
+.views-exposed-widget.views-widget-filter-text label {
+	margin:0 7px 0 10px;
+}
+
+.views-exposed-widget.views-widget-filter-text .views-submit-button {
+	float:right;
+	position:relative;
+}
+
+.views-exposed-form .views-exposed-widget .form-submit {
+	margin-top:2px;
+}
+
+.view.browse-page div.views-row {
+	border-bottom: 1px solid #d8d8d8;
+	padding: 7px 0;
+  margin:0;
+}
+
+.view.browse-page div.views-row-odd {
+	background: #e8e8e8;
+}
+
+.views-exposed-form #edit-text {
+	border: 1px solid #000;
+	width:120px;
+	padding:3px;
+	background: #ffffe0;
+}
+
+#view-results-number {
+	margin: 7px 10px;
+	display:block;
+  color:#444444;
+}
+
+/********** Views: Popular Listings by Category (Front page) **********/
+
+.view.view-popular-listings-by-term .view-content {
+  margin-top:10px;
+}
+
+.view.view-popular-listings-by-term .item-list {
+	margin-bottom:5px;
+}
+
+
+
+/************************************************
+              Content and Wiki Pages 
+ ************************************************/
+
+.node div.content {
+	padding: 10px;
+}
+
+.node #toc {
+	float: right;
+  margin-left: 10px;
+}
+
+.node.wiki-page h2,
+.node.content-page h2 {
+	padding: 0 0 10px 0;
+}
+
+.node.wiki-page h2,
+.node.content-page h3 {
+  padding: 0 0 5px 0;
+}
+
+.node.wiki-page h2,
+.node.content-page p {
+	padding: 5px 0 10px 0;
+}
+
+span.wysiwyg_imageupload.imgupl_floating_right {
+	margin: 0 0 10px 10px;
+}
+
+/************************************************
+                Display Suite 
+ ************************************************/
+ 
+ #content div.nd-region-middle-wrapper{
+  /*padding: 10px 10px;*/
+}
+
+.nd-region-header,
+.nd-region-footer,
+.nd-region-right,
+.nd-region-middle {
+  padding: 0;
+}
+
+.nd-region-header.alpha,
+.nd-region-footer.alpha,
+.nd-region-middle-wrapper.alpha .nd-region-middle {
+	padding-left: 10px;
+}
+
+.nd-region-left.alpha {
+	padding-left: 9px;
+}
+
+.nd-region-header.omega,
+.nd-region-footer.omega,
+.nd-region-right-wrapper.omega .nd-region-right,
+.nd-region-middle-wrapper.omega .nd-region-middle {
+  padding-right: 10px;
+}
+
+#right-sidebar .nd-region-right-wrapper.omega {
+	margin-left:0;
+}
+
+#content div.buildmode-noderef_display,
+#content div.buildmode-heartbeat_teaser {
+  border:solid 1px #c8ecff;
+  -moz-border-radius: 15px;
+  border-radius: 15px;
+  background: #f8f8ff;
+}
+
+/************************************************
+              Miscellaneous Styles
+ ************************************************/
+ 
+.field {
+  padding: 3px 0;
+}
+ 
+.float_right img {
+  float:right;
+  margin-left:5px;
+  margin-right:1px;
+}
+
+#right-sidebar .field {
+  padding: 3px 0;
+}
+
+#content #main .field {
+  padding: 5px 0;
+}
+
+#content #main .field h2 a{
+color:#e79516;
+}
+
+.h2 {
+  font-size:1.5em;
+  font-weight:bold;
+}
+
+.featured-mark {
+  background:#009DFE;
+  color:white;
+  float:right;
+  padding: 3px 25px;
+  -moz-border-radius: 3px;
+  border-radius: 3px;
+  font-weight:bold;
+}
+
+.content-type h2 {
+  color:#aaa;
+  font-size:1.2em;
+  margin:-10px 0;
+  padding:0;
+}
+
+.field-number-connected,
+.number-interested {
+  color:#777;
+  font-size:.9em;
+}
+
+.field-title p {
+  font-weight:bold;
+}
+
+#templink {
+  float:right;
+  padding: 10px 10px 0 0;
+}
+
+/* view for popular  */
+
+.popu_view_box{float:left; width:330px; margin:10px 10px 0 5px; padding:0 0 10px 0; overflow:hidden; }
+.popu_view{overflow:hidden;}
+.popu_view ul{ margin:0px 0 0 0;padding:0 0 10px 10px;list-style:none;}
+.popu_view ul li{margin:0; display:block;background:url(../images/arrow.gif) no-repeat 0 7px; padding:2px 0 3px 12px; font:bold 12px Arial; color:#009cff;}
+.popu_view ul li span{ width:100%; clear:both; margin:15px 0 0 0; color:#929aa4; font:normal 12px Arial;}
+.popu_view ul li a{text-decoration:none;color:#009cff;}
+.popu_view ul li a:hover{text-decoration:underline;}
+.popu_view_box h4{border-bottom:1px solid #b9e4ed; color:#000; margin:0; padding:0 0 5px 0; font:bold 16px Arial;}
+.popu_view_box p{color:#ef6c1d; margin:2px 0 0 0; padding:0 8px 10px 0; font:normal 11px Arial; text-align:justify;}
+.popu_view_box img{width:85px; height:85px; float:left; margin:10px 5px 0 0; padding:4px; border:1px solid #b9e4ed;}
+.popu_view li p {height:0px;color:#929AA4;}
+/* end view for popular */
+/* view for All listing  */
+.popu_view_box2{float:left; width:215px; margin:10px 10px 0 5px; padding:0 0 10px 0; overflow:hidden; }
+.popu_view2{padding-top:0px;padding-left:10px}
+.popu_view2 ul{ margin:0px 0 0 0;padding:0px;list-style:none;}
+.popu_view2 ul li{margin:0; display:block;background:url(../images/arrow.gif) no-repeat 0 7px; padding:2px 0 3px 12px; font:bold 12px Arial; color:#009cff;}
+.popu_view2 ul li span{ width:100%; clear:both; margin:0px 0 0 0; color:#929aa4; font:normal 12px Arial;}
+.popu_view2 ul li a{text-decoration:none;color:#009cff;}
+.popu_view2 ul li a:hover{text-decoration:underline;}
+.popu_view_box2 h4{color:#000; margin:0; padding:0 0 5px 0; font:bold 16px Arial;}
+/* end view for All Listing block */
+/* view for explore davis  */
+.popu_view_box3{float:left; width:100px; margin:0px 0px 0 0px; padding:0 0 0px 0; overflow:hidden; }
+.popu_view3{padding-top:0px;padding-left:0px;}
+.popu_view3 ul{ margin:0px 0 0 0;padding:0px;list-style:none;border:none;}
+.popu_view3 ul li{margin:0px; display:block;color:#009cff;border:none;padding:0px;}
+.popu_view3 ul li a{text-decoration:none;color:#009cff;border:none;padding:0px}
+.popu_view3 ul li a:hover{text-decoration:underline;border:none;}
+.popu_view_box3 h4{color:#000; margin:0; padding:0 0 0px 0; font:bold 12px Arial;border-bottom:1px solid #b9e4ed;margin-left:10px}		
+#right-sidebar .popu_view_box3 ul li { border:none;margin-left:4px;margin-top:10xp;padding:0px;padding-top:3px;padding-bottom:3px;font-size:9px;font-weight:bolder;}
+/* end view for explore davis */
+
+/* top bar */
+#log-menu {
+  clear:both;
+  height:auto;
+  padding: 0px 0 0 0;
+  margin:0;
+}
+
+#block-menu-menu-myaccountblock ul{
+  list-style:none;
+  margin:0 0 0 40px;
+}
+
+#block-menu-menu-myaccountblock ul li{
+  display:block;
+  float:left;
+  margin: 0 0 0 3px !important;
+   
+  background:url(../images/div.jpg) no-repeat right;
+}
+
+#block-menu-menu-myaccountblock ul li a{
+  float:left;
+  display:block;
+  text-align:center;
+  font-size:12px;
+  color:#ffffff;
+  padding:0 7px;
+  font-weight:700;
+}
+
+#block-menu-menu-myaccountblock ul li a.active,
+#block-menu-menu-myaccountblock ul li a:hover{
+  color:#009cff;
+  text-decoration:none;
+}
+.town{background-image: url(../images/town.gif) no-repeat left ; padding-left:20px !important;}
+.top-add{height:45px; width:373px; float:right;}
+#dhtml_menu-19834{background: url(../images/town.gif) no-repeat left !important; padding-left:20px !important;}
+#block-menu-menu-myaccountblock ul.last{background:none;} 
+
+/* top bar end */

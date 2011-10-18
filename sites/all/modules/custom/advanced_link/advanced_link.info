@@ -1,0 +1,6 @@
+; $Id $
+name = Advanced Link
+description = Easily create links to DavisSource and External paths through CKEditor, with advanced configurable settings.
+package = User interface
+core = 6.x
+

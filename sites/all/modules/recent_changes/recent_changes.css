@@ -1,0 +1,7 @@
+table.recent-changes td.date {
+  font-weight: bold;
+}
+table.recent-changes span.change-flag {
+  font-weight: bold;
+  font-style: italic;
+}

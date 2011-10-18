@@ -1,0 +1,53 @@
+/********************************
+**
+** DavisSouce site devlop
+**
+*********************************/
+
+This directory includes:
+
+ - Pressflow core
+ - all the necessary contributed modules and themes in the sites/all dir
+ - image files for the current development content
+ - the sites/files/imagecache directory, with just a .gitignore file, which ignores all the folders in that dir
+ - a root .gitignore file
+ - a copy of the database dump which can be used with the current versions of the files
+ - a custom script, at scripts/custom/gitc, which I use for each commit instead of 'git commit'
+
+/******************
+** Installation
+*******************/
+
+To install:
+ - get all files from github repo
+ - add a working settings.php 
+ - One way to do this is install a dummy site in another directory, then copy that settings.php to this site, then delete the dummy site
+ - Have a database set up and configured in the settings.php file
+ - Import the database dump located in drupaldb.sql to the database
+ - That's it. Should work.
+
+/*************************
+** Commiting to the repo
+**************************/
+
+Each commit to the repo should represent a complete version of the site which can be reverted to. 
+Therefore, for each commit to the repo, make sure that:
+
+ - stage all files that need to be staged
+ - clear all caches (drush cc all)
+ - new db dump to drupaldb.sql
+
+You can use my script at scripts/custom/gitc to automate this, so that you don't need to remember every commit.
+
+----------------------------------------------------------------------------
+  The commit script:
+
+Usage is: gitc [-p] “message”
+message is required for now
+This script:
+ - clears all caches
+ - dumps db to the appropriate place
+ - shows the current git status, and waits for confirmation to continue
+ - makes the commit with the message given. Uses the -a option! All tracked files will be staged!
+ - if -p was specified, it also pushes changes to the remote site
+

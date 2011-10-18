@@ -1,0 +1,803 @@
+<?php
+// $Id$
+
+/**
+ * @file
+ *   Adds AHAH Contoller functionality to CCK Fields.
+ */
+
+// Dynamic Fields plugin hooks should always be available.
+require_once dirname(__FILE__) . '/includes/plugins.inc';
+require_once dirname(__FILE__) . '/includes/form.inc';
+require_once dirname(__FILE__) . '/includes/form_elements.inc';
+
+/**
+ * Implementation of hook_menu().
+ *
+ * Add a callback for the dynamic fields ahah action
+ */
+function dynamic_fields_menu() {
+  $items['dynamic_fields/callback/%/%/%'] = array(
+    'page callback' => 'dynamic_fields_callback',
+    'page arguments' => array(2, 3, 4),
+    'access arguments' => array('access content'),
+    'type' => MENU_CALLBACK,
+    'file' => 'includes/callback.inc',
+  );
+  $params = array();
+  return array_merge(dynamic_fields_invoke_all('menu', $params), $items);
+}
+
+/**
+ * Implementation of hook_form_alter().
+ *
+ */
+function dynamic_fields_form_alter(&$form, &$form_state, $form_id) {
+  switch ($form_id) {
+    case 'content_field_edit_form':
+      module_load_include('inc', 'dynamic_fields', 'includes/admin');
+      dynamic_fields_content_edit_form($form);
+      break;
+  }
+
+  if (isset($form['type']['#value']) && $form_id == $form['type']['#value'] . '_node_form') {
+    module_load_include('inc', 'dynamic_fields', 'includes/form');
+    dynamic_fields_node_form_alter($form, $form_state, $form_id);
+  }
+}
+
+/**
+ * Implementation of hook_widget_settings_alter().
+ */
+
+function dynamic_fields_widget_settings_alter(&$settings, $op, $widget) {
+  module_load_include('inc', 'dynamic_fields', 'includes/admin');
+  _dynamic_fields_widget_settings_alter($settings, $op, $widget);
+}
+
+/**
+ * Implementation of hook_elements().
+ */
+function dynamic_fields_elements() {
+  $elements = array(
+    'dynamic_controller' => array(
+      '#input' => TRUE,
+      '#process' => array('dynamic_fields_controller_process'),
+    ),
+    'dynamic_wrapper' => array(
+      '#input' => TRUE,
+      '#process' => array('dynamic_fields_wrapper_process'),
+    ),
+  );
+
+  foreach (dynamic_fields_allowed_widgets() as $widget) {
+    $elements[$widget]['#process'] = array('dynamic_fields_element_process');
+    $elements[$widget]['#after_build'] = array('dynamic_fields_element_after_build');
+    $elements[$widget]['#element_validate'] = array('dynamic_fields_element_validate');
+  }
+
+  $elements['optionwidgets_select']['#process'][] = 'dynamic_fields_optionwidgets_process';
+  $elements['optionwidgets_buttons']['#process'][] = 'dynamic_fields_optionwidgets_process';
+
+  return $elements;
+}
+
+/**
+ * Implementation of hook_theme().
+ */
+function dynamic_fields_theme() {
+  $theme = array(
+    'dynamic_controller' => array(
+      'arguments' => array('element' => NULL),
+    ),
+    'dynamic_wrapper' => array(
+      'arguments' => array('element' => NULL),
+    ),
+    'dynamic_button' => array(
+      'arguments' => array('element' => NULL),
+    ),
+  );
+  $params = array();
+  return array_merge(dynamic_fields_invoke_all('theme', $params), $theme);
+}
+
+/**
+ * Set the form_state for override functions where no form_state is passed in.
+ */
+function dynamic_fields_set_form_state($form_state = array(), $clear = FALSE) {
+  static $stored_state = array();
+
+  if ($clear) {
+    $stored_state = array();
+    return TRUE;
+  }
+
+  if (!empty($form_state)) {
+    $stored_state = $form_state;
+  }
+
+  return $stored_state;
+}
+
+/**
+ * Implementation of hook_allowed_values().
+ */
+function dynamic_fields_allowed_values($field) {
+  $form_state = dynamic_fields_set_form_state();
+  $info = dynamic_fields_build_field_info($field, $form_state);
+
+  if (empty($info)) {
+    return array();
+  }
+  $params = array($field, $info);
+  $values = dynamic_fields_invoke_field($field['type'], 'allowed_values', $params);
+
+
+  $options = array();
+  foreach ($values as $key => $value) {
+    if (is_array($value) && (!empty($value['rendered']))) {
+      $options[$key] = $value['rendered'];
+    }
+    else {
+      $options[$key] = $value;
+    }
+  }
+
+  if (!$field['required']) {
+    $options = array('' => theme('optionwidgets_none', $field)) + $options;
+  }
+
+  return $options;
+}
+
+/**
+ * Provide a list of potential controller fields in options format.
+ */
+function dynamic_fields_potential_controller_options($field, $type, $include_none = TRUE) {
+  $options = array();
+  $field_types = _content_field_types();
+  $potential_fields = dynamic_fields_potential_controllers($field, $type);
+  if (empty($potential_fields)) {
+    return FALSE;
+  }
+  foreach ($potential_fields as $key => $value) {
+    $field_type = $field_types[$value['type']];
+    $text = t('@type: @field (@label)', array('@type' => t($field_type['label']), '@label' => t($value['name']), '@field' => $value['field_name']));
+    $options[$key] = (drupal_strlen($text) > 80) ? truncate_utf8($text, 77) . '...' : $text;
+  }
+  // Sort the list by type, then by field name, then by label.
+  asort($options);
+  if ($include_none) {
+    array_unshift($options, t('No Controller Field'));
+  }
+  return $options;
+}
+
+/**
+ * Provide a list of potential controller fields.
+ */
+function dynamic_fields_potential_controllers($field, $type) {
+  $return = array();
+  $info = dynamic_fields_info();
+
+  // Get all potential fields for the type
+  foreach ($type['fields'] as $potential_field) {
+    // Check if field type is allowed
+    if (empty($info[$potential_field['type']])) {
+      continue;
+    }
+    $field_info = $info[$potential_field['type']];
+    $widget = $potential_field['widget'];
+    $widget_type = isset($widget['widget_type']) ? $widget['widget_type'] : $widget['type'];
+    // Exclude fields other than those with controllable widgets
+    $allowed_widgets = $field_info['controller_widgets'];
+
+    if (!is_array($allowed_widgets) || !in_array($widget_type, $allowed_widgets)) {
+      continue;
+    }
+    // Exclude the current field
+    if ($potential_field['field_name'] != $field['field_name']) {
+      continue;
+    }
+    // Exlude fields already controlled by the current field
+    if ($widget['dynamic_fields']['controller_field'] == $field['field_name']) {
+      continue;
+    }
+
+    $return[$potential_field['field_name']] = array(
+      'name' => $potential_field['widget']['label'],
+      'field_name' => $potential_field['field_name'],
+      'type' => $potential_field['type'],
+      'widget' => $potential_field['widget']['type'],
+      '_weight' => $potential_field['widget']['weight'],
+    );
+
+  }
+  return $return;
+}
+
+/**
+ * Checks for potential multiple controller fields situation.
+ */
+function dynamic_fields_controller_already_exists($field, $type) {
+  $return = FALSE;
+  $info = dynamic_fields_info();
+
+  // Get all potential fields for the type
+  foreach ($type['fields'] as $potential_field) {
+    // Check if field type is allowed
+    if (empty($info[$potential_field['type']])) {
+      continue;
+    }
+    $field_info = $info[$potential_field['type']];
+    $widget = $potential_field['widget'];
+    $widget_type = isset($widget['widget_type']) ? $widget['widget_type'] : $widget['type'];
+    
+    // Exclude the current field
+    if ($potential_field['field_name'] == $field['field_name']) {
+      continue;
+    }
+    if ($widget['dynamic_fields']['make_controller_field'] == 1) {
+    	$return = TRUE;
+      break;
+    }
+
+  }
+  return $return;
+}
+
+/**
+ * Return the controller field.
+ */
+function dynamic_fields_controller_field($field, $type) {
+  if (is_array($type)) {
+    $type_name = $type['type_name'];
+  }
+  else {
+    $type_name = $type;
+  }
+
+  $return = FALSE;
+  $widget = $field['widget'];
+  $controller_field = $widget['dynamic_fields']['controller_field'];
+  if (!empty($controller_field)) {
+    $return = content_fields($controller_field, $type_name);
+  }
+
+  return $return;
+}
+
+/**
+ * Provide a themed list of controlled fields.
+ */
+function dynamic_fields_controlled_fields_list($field, $type) {
+  $items = array();
+  $controlled_fields = dynamic_fields_controlled_fields($field, $type);
+  if (empty($controlled_fields)) {
+    return FALSE;
+  }
+  // TODO: add a theming function to change output.
+  foreach ($controlled_fields as $key => $value) {
+    $items[$key] = array(
+      'data' => '<strong>' . $value['widget']['label'] . '</strong> - ' . $value['field_name'] . ' - ' . $value ['type'],
+    );
+  }
+
+  return $items;
+}
+
+/**
+ * Provide a list of controlled fields.
+ */
+function dynamic_fields_controlled_fields($field, $type) {
+  $return = array();
+  // Get list of allowed widgets for controlled fields
+  $allowed_widgets = dynamic_fields_allowed_widgets('', 'controlled');
+  // Get all potential fields for the type
+  foreach ($type['fields'] as $controlled_field) {
+    $widget = $controlled_field['widget'];
+    $widget_type = isset($widget['widget_type']) ? $widget['widget_type'] : $widget['type'];
+    // Exclude fields other than those with controllable widgets
+    if (!in_array($widget_type, $allowed_widgets)) {
+      continue;
+    }
+    // Exclude the current field
+    if ($controlled_field['field_name'] == $field['field_name']) {
+      continue;
+    }
+    // dpr($widget);
+    // Top level controller cannot be controlled
+    if ($widget['dynamic_fields']['make_controller_field'] == 1) {
+    	continue;
+    }
+    // Exlude fields not controlled by the current field
+    //if ($widget['dynamic_fields']['controller_field'] != $field['field_name']) {
+      //continue;
+    //}
+
+    $return[$controlled_field['field_name']] = $controlled_field;
+  }
+
+  return $return;
+}
+
+/**
+ * Provide a list of controller fields/controlled fields enabled for a content type.
+ */
+function dynamic_fields_type_controllers_controlled($type, $tree = NULL) {
+  $controller_fields = array();
+  $controlled_fields = array();
+  // Get list of allowed widgets for both field types
+  $allowed_widgets = dynamic_fields_allowed_widgets();
+
+  foreach ($type['fields'] as $field) {
+    $widget = $field['widget'];
+    $widget_type = isset($widget['widget_type']) ? $widget['widget_type'] : $widget['type'];
+    // Exclude fields other than those with allowed widgets
+    if (!in_array($widget_type, $allowed_widgets)) {
+      continue;
+    }
+    if (!($field['widget']['dynamic_fields']['make_controller_field'])) {
+      continue;
+    }
+    $controller_fields[$field['field_name']] = array();
+    //dpr($field['widget']['dynamic_fields']['allowed_values']);
+    foreach ($field['widget']['dynamic_fields']['allowed_values'] as $allowed_values) {
+    	foreach ($allowed_values['choice_controlled_field'] as $key => $value) {
+    		if ($value) {
+    			if (!in_array($value, array_values($controller_fields[$field['field_name']]))) {
+    				$controller_fields[$field['field_name']][] = $value;
+    			}
+    		}
+    	}
+    }
+  }
+
+  return $controller_fields;
+}
+
+/**
+ * Provide a list of controller fields/controlled fields enabled for a content type.
+ */
+function dynamic_fields_type_controllers_controlled2($type, $tree = NULL) {
+  $controller_fields = array();
+  $controlled_fields = array();
+  // Get list of allowed widgets for both field types
+  $allowed_widgets = dynamic_fields_allowed_widgets();
+
+  foreach ($type['fields'] as $field) {
+    $widget = $field['widget'];
+    $widget_type = isset($widget['widget_type']) ? $widget['widget_type'] : $widget['type'];
+    // Exclude fields other than those with allowed widgets
+    if (!in_array($widget_type, $allowed_widgets)) {
+      continue;
+    }
+    if ($field['widget']['dynamic_fields']['make_controller_field'] == 1) {
+      continue;
+    }
+    $controller_fields[$field['field_name']] = array();
+    //dpr($field['widget']['dynamic_fields']['allowed_values']);
+    if (isset($field['widget']['dynamic_fields']['allowed_values'])) {
+	    foreach ($field['widget']['dynamic_fields']['allowed_values'] as $allowed_values) {
+	    	foreach ($allowed_values['choice_controlled_field'] as $key => $value) {
+	    		if ($value) {
+	    			$controller_fields[$field['field_name']][] = $value;
+	    		}
+	    	}
+	    }
+    }
+  }
+
+  return $controller_fields;
+}
+
+/**
+ * Provide a list of controller fields enabled for a content type.
+ */
+function dynamic_fields_type_controllers($type, $tree = NULL) {
+  $controller_fields = array();
+  $controlled_fields = array();
+  // Get list of allowed widgets for both field types
+  $allowed_widgets = dynamic_fields_allowed_widgets();
+
+  foreach ($type['fields'] as $field) {
+    $widget = $field['widget'];
+    $widget_type = isset($widget['widget_type']) ? $widget['widget_type'] : $widget['type'];
+    // Exclude fields other than those with allowed widgets
+    if (!in_array($widget_type, $allowed_widgets)) {
+      continue;
+    }
+    if (!empty($field['widget']['dynamic_fields']['controller_field'])) {
+      $controlled_fields[$field['widget']['dynamic_fields']['controller_field']][$field['field_name']] = array();
+    }
+    else {
+      $controller_fields[$field['field_name']] = array();
+    }
+  }
+
+  dynamic_fields_type_controllers_tree($controller_fields, $controlled_fields);
+
+  // Clear out fields with no dynamic fields.
+  foreach ($controller_fields as $key => $field) {
+    if (empty($field)) {
+      unset($controller_fields[$key]);
+    }
+  }
+
+  return $controller_fields;
+}
+
+/**
+ * Recursive function to fill out a tree of controller and controlled fields.
+ */
+function dynamic_fields_type_controllers_tree(&$tree, $controlled_fields) {
+  foreach ($tree as $field_name => $field_array) {
+    if (!empty($controlled_fields[$field_name]) && is_array($controlled_fields[$field_name])) {
+      $tree[$field_name] = $controlled_fields[$field_name];
+      dynamic_fields_type_controllers_tree($tree[$field_name], $controlled_fields);
+    }
+  }
+}
+
+/**
+ * Return the values inside form_state for a given field.
+ */
+
+function dynamic_fields_retrieve_field_value($field, $form_state) {
+  $return = FALSE;
+  $form_value = !empty($form_state['values'][$field['field_name']]) ? $form_state['values'][$field['field_name']] : null;
+  $params = array($field, $form_value, $form_state);
+  $return = dynamic_fields_invoke_field($field['type'], 'retrieve_field_value', $params);
+  return $return;
+}
+
+/**
+ * Return the values inside form_state for a given field.
+ */
+
+function dynamic_fields_retrieve_field_keys($field, $values) {
+  $return = FALSE;
+  $params = array($field, $values);
+  $return = dynamic_fields_invoke_field($field['type'], 'retrieve_field_keys', $params);
+  return $return;
+}
+
+/**
+ * Return the titles inside form_state for a given field.
+ */
+
+function dynamic_fields_retrieve_field_titles($field, $values) {
+  $return = FALSE;
+  $params = array($field, $values);
+  $return = dynamic_fields_invoke_field($field['type'], 'retrieve_field_titles', $params);
+  return $return;
+}
+
+/**
+ * Function to override fields on the fly, so we can use our own validation and
+ * allowed option.
+ */
+function dynamic_fields_set_field_overrides(&$fields, $tree = NULL, $reset = FALSE) {
+  static $overrides = array();
+  // Check for reset param, and if there revert fields back to their original modules
+  if ($reset && !empty($overrides)) {
+    foreach ($overrides as $field => $original) {
+      $fields[$field]['module'] = $original;
+    }
+    unset($overrides);
+    return;
+  }
+
+  if (empty($tree)) {
+    return $overrides;
+  }
+  $another_level = FALSE;
+  foreach ($tree as $controller_name => $field_array) {
+    if (empty($field_array)) {
+      continue;
+    }
+    foreach ($field_array as $field_name => $controlled_field) {
+      // Check to see if this field has already been set.
+      if (empty($overrides[$field_name])) {
+        if ($fields[$field_name]['module'] != 'dynamic_fields') {
+          $overrides[$field_name] = $fields[$field_name]['module'];
+          $fields[$field_name]['module'] = 'dynamic_fields';
+        }
+      }
+      // Process any controlled fields
+      if (!empty($controlled_field)) {
+        $another_level = TRUE;
+      }
+    }
+    if ($another_level) {
+      dynamic_fields_set_field_overrides($fields, $field_array);
+    }
+  }
+
+}
+
+
+/**
+ * Submit handler for fallback submit button.
+ */
+
+function dynamic_fields_fallback_submit($form, &$form_state) {
+  unset($form_state['submit_handlers']);
+  $form_state['rebuild'] = TRUE;
+}
+
+
+/**
+ * Add the ahah controller settings
+ */
+function dynamic_fields_set_ahah_settings(&$element, $field) {
+	//dpr($field);
+	if ($field['widget']['dynamic_fields']['make_controller_field'] == 1) {
+	  $delta = isset($element['#delta']) ? $element['#delta'] : 0;
+	  $element['#ahah'] = array(
+	    'path' => 'dynamic_fields/callback/'.   $field['type_name'] .'/'. $field['field_name'] .'/'. $delta,
+	    'wrapper' => 'checkboxes',
+	    'method' => 'replace',
+	    'effect' => 'fade',
+	    //'event' => 'keypress',
+	  );
+	}
+}
+
+/**
+ * Get the ahah_wrapper element
+ */
+function dynamic_fields_get_ahah_wrapper_element($form, $field, $type, $level = 0) {
+  $field_name = $field['field_name'];
+  //$controller_field = dynamic_fields_controller_field($field, $type);
+  $controlled_fields = dynamic_fields_controlled_fields($field, $type);
+  
+  $field_element = &dynamic_fields_retrieve_field_element($form, $type, $field_name);
+
+  if (!empty($field_element['#controlled_field'])) {
+    $parent = &dynamic_fields_retrieve_field_parent_element($form, $type, $field_element['#controlled_field']);
+    $form_element = $parent[$field_name . '_ahah_wrapper'];
+  }
+  elseif (!empty($field_element['#controlled_group'])) {
+    $parent = $form[$field_element['#controlled_group']];
+    $form_element = $parent[$field_name . '_ahah_wrapper'];
+  }
+  elseif (is_array($field_element['#fields'])) {
+    $form_element = $field_element[$field_name . '_ahah_wrapper'];
+  }
+
+  return $form_element;
+}
+/**
+ * Return a list of valid field elements to apply ahah settings to.
+ */
+function dynamic_fields_get_ahah_elements($field = NULL) {
+  $valid = array(
+    'submit', 'button', 'image_button', 'password', 'textfield', 'textarea',
+    'blur', 'radio', 'checkbox', 'select'
+  );
+  if (!empty($field)) {
+    $params = array();
+    $valid = array_merge($valid, dynamic_fields_invoke_field($field['type'], 'get_ahah_elements', $params));
+  }
+  return $valid;
+}
+
+
+/**
+ * Locate the actual field element, and apply the controller ahah settings
+ *
+ * TODO: split the controller and controlled fields into their own functions with invokes.
+ */
+function dynamic_fields_set_field_elements(&$form, &$field, $type = 'controller') {
+  $field_columns = array_keys($field['columns']);
+  $field_column = $field_columns[0];
+  // Get a list of elements that we can apply ahah settings on.
+  $valid_field_elements = dynamic_fields_get_ahah_elements($field);
+//dpr($field);
+  foreach (element_children($form) as $key) {
+    dynamic_fields_set_field_elements($form[$key], $field, $type);
+  }
+  // Check to see if we have a valid form element here
+  if (in_array($form['#type'], $valid_field_elements)) {
+    if ($type == 'controller') {
+      dynamic_fields_set_ahah_settings($form, $field);
+      $form = form_expand_ahah($form);
+    }
+    elseif ($type == 'controlled') {
+
+    }
+
+  }
+}
+
+
+function dynamic_fields_allowed_values_mapping($field) {
+  static $controller_mappings = array();
+
+  $cid = $field['field_name'];
+
+  if (isset($controller_mappings[$cid])) {
+    return $controller_mappings[$cid];
+  }
+
+  $mapping = $field['widget']['dynamic_fields']['allowed_mapping']['mapping'];
+  $controller_mappings[$cid] = array();
+
+  $list = explode("\n", $mapping);
+  $list = array_map('trim', $list);
+  $list = array_filter($list, 'strlen');
+  foreach ($list as $opt) {
+    // Sanitize the user input with a permissive filter.
+    $opt = content_filter_xss($opt);
+    if (strpos($opt, '|') !== FALSE) {
+      list($key, $value_list) = explode('|', $opt);
+      $values = explode(',', $value_list);
+      $controller_mappings[$cid][$key] = $values;
+    }
+    else {
+      continue;
+    }
+  }
+  return $controller_mappings[$cid];
+}
+
+function dynamic_fields_filter_allowed_values($all_values, $mapping, $keys) {
+  $allowed_values = array();
+  if (!is_array($keys)) {
+    return $allowed_values;
+  }
+  foreach ($keys as $key) {
+    if (!is_array($mapping[$key])) {
+      continue;
+    }
+    foreach ($mapping[$key] as $value) {
+      if (!empty($all_values[$value])) {
+        $allowed_values[$value] = $all_values[$value];
+      }
+    }
+  }
+  return $allowed_values;
+}
+
+/**
+ * Process the dynamic_controller element.
+ *
+ */
+function dynamic_fields_controller_process($element, $edit, &$form_state, $form) {
+  dynamic_fields_set_form_state($form_state);
+  if (!empty($element['#controller_field_name'])) {
+    $attributes = array('class' => 'dynamic-fields-controller clear-block');
+    $element['#prefix'] = '<div '. drupal_attributes($attributes) .'>';
+    $element['#suffix'] = '</div>';
+    $element['#weight'] = $element[$element['#controller_field_name']]['#weight'];
+    $element[$element['#controller_field_name']]['#weight'] = 0;
+
+    $element['fallback_button'] = array(
+      '#type' => 'submit',
+      '#button_type' => 'submit',
+      '#value' => t('Continue'),
+      '#attributes' => array('class' => 'ahah-fallback-button'),
+      '#submit' => array('dynamic_fields_fallback_submit'),
+      '#prefix' => '<div class="fallback-button-wrapper">',
+      '#suffix' => '</div>',
+      '#weight' => 1,
+    );
+
+    if (!empty($element['#fields']) && is_array($element['#fields'])) {
+      $wrapper = array();
+      $wrapper['#type'] = 'dynamic_wrapper';
+      $wrapper['#parent_field'] = $element['#controller_field_name'];
+      $wrapper['#weight'] = 2;
+      $wrapper['#field_count'] = $element['#field_count'];
+      $wrapper['#fields'] = $element['#fields'];
+      $element[$element['#controller_field_name'] . '_ahah_wrapper'] = $wrapper;
+    }
+
+  }
+  return $element;
+}
+
+/**
+ * Process the dynamic_wrapper element.
+ *
+ */
+function dynamic_fields_wrapper_process($element, $edit, &$form_state, $form) {
+  if (!empty($element['#parent_field'])) {
+    $wrapper_id = $element['#parent_field'] . '-ahah-wrapper';
+    $attributes = array('id' => $wrapper_id, 'class' => 'dynamic-fields-wrapper');
+    $element['#prefix'] = '<div '. drupal_attributes($attributes) .'>';
+    $element['#suffix'] = '</div>';
+  }
+
+  if (is_array($element['#fields'])) {
+    foreach ($element['#fields'] as $field_name => $field_element) {
+      // If there is only one field, we set the weight of the wrapper to match it.
+      if ($element['#field_count'] == 1) {
+        $element['#weight'] = $field_element['#weight'];
+      }
+      // Set the preprocess function. At this stage the process key is not set, however once we set it here,
+      // this prevents it from being set in the normal fashion. So, we need to retrieve the element info and
+      // do it ourselves.
+      $element_info = _element_info($field_element['#type']);
+      // Set our preprocess function.
+      $field_element['#process'] = array('dynamic_fields_element_preprocess');
+      // Merge in other functions for this element.
+      $field_element['#process'] = array_merge($field_element['#process'], $element_info['#process']);
+      // Todo - should we add dynamic_fields_element_preprocess here instead of in the hook_elements?
+      
+      $element[$field_name] = $field_element;
+    }
+  }
+  
+  return $element;
+}
+
+/**
+ * FAPI theme for an individual elements.
+ */
+function theme_dynamic_controller($element) {
+  return $element['#children'];
+}
+
+/**
+ * FAPI theme for an individual elements.
+ */
+function theme_dynamic_wrapper($element) {
+  return $element['#children'];
+}
+
+/**
+ * Disable validation for all of the form.
+ */
+function dynamic_fields_replace_string_tokens($info, $string, $delimiter = '+') {
+  $return = $string;
+
+  $values = $info['controller_value'];
+  $keys = dynamic_fields_retrieve_field_keys($info['controller_field'], $values);
+  $titles = dynamic_fields_retrieve_field_titles($info['controller_field'], $values);
+
+  $search = array(
+    '[controller_key]',
+    '[controller_key_multiple]',
+    '[controller_title]',
+    '[controller_title_multiple]',
+  );
+
+  $replace = array(
+    $keys[0],
+    implode($delimiter, $keys),
+    $titles[0],
+    implode($delimiter, $titles),
+  );
+
+  $return = str_replace($search, $replace, $string);
+
+  return $return;
+}
+
+
+/**
+ * Builds a formatted list of our simple tokens
+ */
+function dynamic_fields_string_tokens_help($delimiter = '+', $prefix = '[', $suffix = ']') {
+  $tokens = array(
+    'controller_key' => t('The controller field\'s key value. If the field has multiple values then the first is used.'),
+    'controller_key_multiple' => t('All the controller field\'s key values, separated by %delimiter.', array('%delimiter' => $delimiter)),
+    'controller_title' => t('The controller field\'s title. If the field has multiple values then the first is used.'),
+    'controller_title_multiple' => t('All the controller field\'s titles, separated by %delimiter', array('%delimiter' => $delimiter)),
+  );
+
+  $headers = array(t('Token'), t('Replacement value'));
+  $rows = array();
+  foreach ($tokens as $token => $description) {
+    $row = array();
+    $row[] = $prefix . $token . $suffix;
+    $row[] = $description;
+    $rows[] = $row;
+  }
+
+  $output = theme('table', $headers, $rows, array('class' => 'description'));
+  return $output;
+}
+

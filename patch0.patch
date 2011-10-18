@@ -1,0 +1,10 @@
+diff --git a/sites/all/modules/apachesolr_autocomplete/README.txt b/sites/all/modules/apachesolr_autocomplete/README.txt
+index 29dac41..c8ecf5c 100644
+--- a/sites/all/modules/apachesolr_autocomplete/README.txt
++++ b/sites/all/modules/apachesolr_autocomplete/README.txt
+@@ -1,4 +1,5 @@
+ 
++Apache Solr Autocomplete module for Drupal. Created
+ Apache Solr Autocomplete module for Drupal.
+ 
+ -- SUMMARY --

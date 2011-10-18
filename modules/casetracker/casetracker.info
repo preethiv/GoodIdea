@@ -1,0 +1,13 @@
+name = Case Tracker
+description = "Enables the handling of projects and their cases."
+core = 6.x
+package = "Case Tracker"
+dependencies[] = views
+
+
+; Information added by drupal.org packaging script on 2011-02-25
+version = "6.x-1.x-dev"
+core = "6.x"
+project = "casetracker"
+datestamp = "1298618938"
+
