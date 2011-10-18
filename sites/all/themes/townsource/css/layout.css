@@ -1,0 +1,495 @@
+/* Containers
+----------------------------------------------------------------------------------------------------*/
+.container_16{
+  margin-left: auto;
+  margin-right: auto;
+  width: 960px;
+  
+  
+}
+
+/* Grid >> Children (Alpha ~ First, Omega ~ Last)
+----------------------------------------------------------------------------------------------------*/
+
+.alpha {
+  margin-left: 0 !important;
+}
+
+.omega {
+  margin-right: 0 !important;
+}
+
+
+
+/* Grid >> Global
+----------------------------------------------------------------------------------------------------*/
+ 
+.grid_1, .grid-1, 
+.grid_2, .grid-2, 
+.grid_3, .grid-3, 
+.grid_4, .grid-4, 
+.grid_5, .grid-5, 
+.grid_6, .grid-6, 
+.grid_7, .grid-7, 
+.grid_8, .grid-8, 
+.grid_9, .grid-9, 
+.grid_10, .grid-10, 
+.grid_11, .grid-11, 
+.grid_12, .grid-12, 
+.grid_13, .grid-13, 
+.grid_14, .grid-14, 
+.grid_15, .grid-15,
+.grid_16, .grid-16 {
+  display:inline;
+  float: left;
+  position: relative;
+  margin-left: 10.0px;
+  margin-right: 10.0px;
+}
+
+
+/* Grid >> 2 Columns
+----------------------------------------------------------------------------------------------------*/
+
+.container_16 .grid_1,
+.container_16 .grid-1{
+  width:40px;
+}
+
+.container_16 .grid_2,
+.container_16 .grid-2{
+  width:100px;
+}
+
+.container_16 .grid_3,
+.container_16 .grid-3{
+  width:160px;
+}
+
+.container_16 .grid_4,
+.container_16 .grid-4{
+  width:220px;
+}
+
+.container_16 .grid_5,
+.container_16 .grid-5{
+  width:280px;
+}
+
+.container_16 .grid_6,
+.container_16 .grid-6{
+  width:340px;
+}
+
+.container_16 .grid_7,
+.container_16 .grid-7{
+  width:400px;
+}
+
+.container_16 .grid_8,
+.container_16 .grid-8{
+  width:460px;
+}
+
+.container_16 .grid_9,
+.container_16 .grid-9{
+  width:520px;
+}
+
+.container_16 .grid_10,
+.container_16 .grid-10{
+  width:580px;
+}
+
+.container_16 .grid_11,
+.container_16 .grid-11{
+  width:640px;
+}
+
+.container_16 .grid_12,
+.container_16 .grid-12{
+  width:700px;
+}
+
+.container_16 .grid_13,
+.container_16 .grid-13{
+  width:760px;
+}
+
+.container_16 .grid_14,
+.container_16 .grid-14{
+  width:820px;
+}
+
+.container_16 .grid_15,
+.container_16 .grid-15{
+  width:880px;
+}
+
+.container_16 .grid_16,
+.container_16 .grid-16{
+  width:940px;
+}
+
+
+
+
+
+/* Prefix Extra Space >> 2 Columns
+----------------------------------------------------------------------------------------------------*/
+
+    .container_16 .prefix_1,
+.container_16 .prefix-1 {
+  padding-left:60px;
+}
+
+    .container_16 .prefix_2,
+.container_16 .prefix-2 {
+  padding-left:120px;
+}
+
+    .container_16 .prefix_3,
+.container_16 .prefix-3 {
+  padding-left:180px;
+}
+
+    .container_16 .prefix_4,
+.container_16 .prefix-4 {
+  padding-left:240px;
+}
+
+    .container_16 .prefix_5,
+.container_16 .prefix-5 {
+  padding-left:300px;
+}
+
+    .container_16 .prefix_6,
+.container_16 .prefix-6 {
+  padding-left:360px;
+}
+
+    .container_16 .prefix_7,
+.container_16 .prefix-7 {
+  padding-left:420px;
+}
+
+    .container_16 .prefix_8,
+.container_16 .prefix-8 {
+  padding-left:480px;
+}
+
+    .container_16 .prefix_9,
+.container_16 .prefix-9 {
+  padding-left:540px;
+}
+
+    .container_16 .prefix_10,
+.container_16 .prefix-10 {
+  padding-left:600px;
+}
+
+    .container_16 .prefix_11,
+.container_16 .prefix-11 {
+  padding-left:660px;
+}
+
+    .container_16 .prefix_12,
+.container_16 .prefix-12 {
+  padding-left:720px;
+}
+
+    .container_16 .prefix_13,
+.container_16 .prefix-13 {
+  padding-left:780px;
+}
+
+    .container_16 .prefix_14,
+.container_16 .prefix-14 {
+  padding-left:840px;
+}
+
+    .container_16 .prefix_15,
+.container_16 .prefix-15 {
+  padding-left:900px;
+}
+
+
+
+/* Suffix Extra Space >> 2 Columns
+----------------------------------------------------------------------------------------------------*/
+
+    .container_16 .suffix_1,
+.container_16 .suffix-1 {
+  padding-right:60px;
+}
+
+    .container_16 .suffix_2,
+.container_16 .suffix-2 {
+  padding-right:120px;
+}
+
+    .container_16 .suffix_3,
+.container_16 .suffix-3 {
+  padding-right:180px;
+}
+
+    .container_16 .suffix_4,
+.container_16 .suffix-4 {
+  padding-right:240px;
+}
+
+    .container_16 .suffix_5,
+.container_16 .suffix-5 {
+  padding-right:300px;
+}
+
+    .container_16 .suffix_6,
+.container_16 .suffix-6 {
+  padding-right:360px;
+}
+
+    .container_16 .suffix_7,
+.container_16 .suffix-7 {
+  padding-right:420px;
+}
+
+    .container_16 .suffix_8,
+.container_16 .suffix-8 {
+  padding-right:480px;
+}
+
+    .container_16 .suffix_9,
+.container_16 .suffix-9 {
+  padding-right:540px;
+}
+
+    .container_16 .suffix_10,
+.container_16 .suffix-10 {
+  padding-right:600px;
+}
+
+    .container_16 .suffix_11,
+.container_16 .suffix-11 {
+  padding-right:660px;
+}
+
+    .container_16 .suffix_12,
+.container_16 .suffix-12 {
+  padding-right:720px;
+}
+
+    .container_16 .suffix_13,
+.container_16 .suffix-13 {
+  padding-right:780px;
+}
+
+    .container_16 .suffix_14,
+.container_16 .suffix-14 {
+  padding-right:840px;
+}
+
+    .container_16 .suffix_15,
+.container_16 .suffix-15 {
+  padding-right:900px;
+}
+
+
+
+/* Push Space >> 2 Columns
+----------------------------------------------------------------------------------------------------*/
+
+    .container_16 .push_1,
+.container_16 .push-1 {
+  left:60px;
+}
+
+    .container_16 .push_2,
+.container_16 .push-2 {
+  left:120px;
+}
+
+    .container_16 .push_3,
+.container_16 .push-3 {
+  left:180px;
+}
+
+    .container_16 .push_4,
+.container_16 .push-4 {
+  left:240px;
+}
+
+    .container_16 .push_5,
+.container_16 .push-5 {
+  left:300px;
+}
+
+    .container_16 .push_6,
+.container_16 .push-6 {
+  left:360px;
+}
+
+    .container_16 .push_7,
+.container_16 .push-7 {
+  left:420px;
+}
+
+    .container_16 .push_8,
+.container_16 .push-8 {
+  left:480px;
+}
+
+    .container_16 .push_9,
+.container_16 .push-9 {
+  left:540px;
+}
+
+    .container_16 .push_10,
+.container_16 .push-10 {
+  left:600px;
+}
+
+    .container_16 .push_11,
+.container_16 .push-11 {
+  left:660px;
+}
+
+    .container_16 .push_12,
+.container_16 .push-12 {
+  left:720px;
+}
+
+    .container_16 .push_13,
+.container_16 .push-13 {
+  left:780px;
+}
+
+    .container_16 .push_14,
+.container_16 .push-14 {
+  left:840px;
+}
+
+    .container_16 .push_15,
+.container_16 .push-15 {
+  left:900px;
+}
+
+
+
+
+
+/* Pull Space >> 2 Columns
+----------------------------------------------------------------------------------------------------*/
+
+    .container_16 .pull_1,
+.container_16 .pull-1 {
+  right:60px;
+}
+
+    .container_16 .pull_2,
+.container_16 .pull-2 {
+  right:120px;
+}
+
+    .container_16 .pull_3,
+.container_16 .pull-3 {
+  right:180px;
+}
+
+    .container_16 .pull_4,
+.container_16 .pull-4 {
+  right:240px;
+}
+
+    .container_16 .pull_5,
+.container_16 .pull-5 {
+  right:300px;
+}
+
+    .container_16 .pull_6,
+.container_16 .pull-6 {
+  right:360px;
+}
+
+    .container_16 .pull_7,
+.container_16 .pull-7 {
+  right:420px;
+}
+
+    .container_16 .pull_8,
+.container_16 .pull-8 {
+  right:480px;
+}
+
+    .container_16 .pull_9,
+.container_16 .pull-9 {
+  right:540px;
+}
+
+    .container_16 .pull_10,
+.container_16 .pull-10 {
+  right:600px;
+}
+
+    .container_16 .pull_11,
+.container_16 .pull-11 {
+  right:660px;
+}
+
+    .container_16 .pull_12,
+.container_16 .pull-12 {
+  right:720px;
+}
+
+    .container_16 .pull_13,
+.container_16 .pull-13 {
+  right:780px;
+}
+
+    .container_16 .pull_14,
+.container_16 .pull-14 {
+  right:840px;
+}
+
+    .container_16 .pull_15 {
+  right:900px;
+}
+
+
+
+
+/* Clear Floated Elements
+----------------------------------------------------------------------------------------------------*/
+
+
+.clear {
+  clear: both;
+  display: block;
+  overflow: hidden;
+  visibility: hidden;
+  width: 0;
+  height: 0;
+}
+
+
+.clearfix:after {
+  clear: both;
+  content: ' ';
+  display: block;
+  font-size: 0;
+  line-height: 0;
+  visibility: hidden;
+  width: 0;
+  height: 0;
+}
+
+.clearfix {
+  display: inline-block;
+}
+
+* html .clearfix {
+  height: 1%;
+}
+
+.clearfix {
+  display: block;
+}
