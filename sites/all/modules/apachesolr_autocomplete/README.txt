@@ -1,5 +1,5 @@
 
-Apache Solr Autocomplete Text module for Drupal.
+Apache Solr Autocomplete Text2lll module for Drupal. Nantha
 
 -- SUMMARY --
 
