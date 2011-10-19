@@ -1,0 +1,10 @@
+<?php
+
+/**
+ * Rebuild the site's menu to remove the stale menu item.
+ */
+function signup_confirm_email_update_6000() {
+  menu_rebuild();
+  return array();
+}
+
