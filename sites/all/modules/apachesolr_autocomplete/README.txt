@@ -1,5 +1,5 @@
 
-Apache Solr Autocomplete module for Drupal.
+Apache Solr Autocomplete Text module for Drupal.
 
 -- SUMMARY --
 
