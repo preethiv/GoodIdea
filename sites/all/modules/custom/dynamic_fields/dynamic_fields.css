@@ -1,0 +1,21 @@
+/* $Id$
+
+/* Clear the floats, so the ahah wrapper doesn't move things about */
+.fallback-button-wrapper {
+  clear: both;
+}
+
+.dynamic-fields-controller div.description {
+  clear: both;
+}
+
+/* Keep it the fallback button close to the controller element */
+.ahah-fallback-button {
+  margin-top: 0em !important;
+}
+
+/* hide the fallback button when not degrading to non-javascript browser */
+html.js .ahah-fallback-button {
+  display: none; 
+}
+

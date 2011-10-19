@@ -1,0 +1,16 @@
+/* $Id $ */
+
+/**
+ * @file
+ */
+
+div.cke_dialog_ui_input_text #autocomplete li.selected *
+{
+  cursor: default;
+  color: #fff;
+}
+
+input.cke_dialog_ui_input_text.form-autocomplete
+{
+  min-height: 16px;
+}

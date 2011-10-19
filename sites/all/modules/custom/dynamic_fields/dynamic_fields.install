@@ -1,0 +1,11 @@
+<?php
+// $Id$
+
+/**
+ * @file
+ * Implementation of hook_install().
+ */
+function dynamic_fields_install() {
+  // Dynamic Fields needs to load after all CCK field related modules.
+  db_query("UPDATE {system} SET weight = 20 WHERE type = 'module' AND name = 'dynamic_fields'");
+}

@@ -1,0 +1,34 @@
+<?php
+/**
+ * @file
+ * Checks node title of all content types and validate uniqueness of node title among that content type. 
+ */
+
+/**
+ * 
+ * @param unknown_type $node
+ * 	Node which is going to be validated for title uniqueness.
+ * 
+ * @param unknown_type $op
+ * 	Different operations available to perform on node. e.g validate, view etc.
+ * 
+ * @return unknown_type
+ */
+function uniq_title_nodeapi(&$node, $op, $a3 = NULL, $a4 = NULL) {
+	switch($op){
+		case "validate":
+			//Allow user to delete duplicate nodes if already exist.
+			if($node->op != 'Delete') {
+				//Count the duplicate node title of that content type.
+				$duplicate_title_count = db_result(db_query('SELECT count(*) FROM {node} INNER JOIN {node_revisions} ON node.nid = node_revisions.nid WHERE node_revisions.title = "%s" AND node.nid <> %d AND node.type = "%s"', $node->title, $node->nid, $node->type));
+				print $duplicate_title_count.'<br />';
+				//If count is greater then 0 then set error on title field.
+				if($duplicate_title_count > 0) {
+					form_set_error('title','Duplicate entry present. Please choose other title.');
+				}
+			}
+			break;
+		default:
+      break;
+	}
+}

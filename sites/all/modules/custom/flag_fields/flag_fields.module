@@ -1,0 +1,459 @@
+<?php
+// $Id$ flag_fields.module v1.0 Yogesh S. Chaugule 11 Oct, 2011
+
+/**
+ * @filesource
+ *   Flag fields module allow users to attached a note to flags by mapping webforms with flags
+ * @todo:
+ *   1. Create link status on Edit flag page.
+ *   2. Allow ajax submission
+ *   3. Remove unwanted code taken from webform (if any).
+ */
+
+// Define global variables
+define('FLAG_FIELDS', 'admin/build/flag_fields');
+
+/******************************************************************************************
+ * Drupal Core Hooks                                                                      *
+ ******************************************************************************************/
+
+/**
+ * Implementation of hook_menu
+ */
+function flag_fields_menu() {
+  $items = array();
+  $items[FLAG_FIELDS] = array(
+    'title' => 'Flags Fields Settings',
+    'page callback' => 'flag_fields_listing',
+    'access callback' => 'user_access',
+    'access arguments' => array('manage flag fields'),
+    'type' => MENU_NORMAL_ITEM,
+  );
+  $items[FLAG_FIELDS . '/%'] = array(
+    'title' => 'Edit Flags Field',
+    'page callback' => 'flag_fields_view',
+    'page arguments' => array(1),
+    'access callback' => 'user_access',
+    'access arguments' => array('manage flag fields'),
+    'weight' => 1,
+    'type' => MENU_LOCAL_TASK,
+  );
+  $items[FLAG_FIELDS . '/%/delete'] = array(
+    'title' => t('Are you sure you want to delete this flag fields mapping.'),
+    'page callback' => 'drupal_get_form',
+    'page arguments' => array('flag_fields_delete_confirm', 1),
+    'access callback' => 'user_access',
+    'access arguments' => array('manage flag fields'),
+    'weight' => 1,
+    'type' => MENU_CALLBACK,
+  );
+  return $items;
+}
+
+/**
+ * Implementation of hook_perm().
+ */
+function flag_fields_perm() {
+  return array('manage flag fields');
+}
+
+/**
+ * Implementation of hook_form_alter
+ * @param Array $form
+ * @param Array $form_state
+ * @param String $form_id
+ */
+function flag_fields_form_alter(&$form, &$form_state, $form_id) {
+  // print '<br><pre>'; print_r($form_id); print '</pre>';
+  global $user;
+  switch ($form_id) {
+    case 'flag_confirm':
+      module_load_include('inc', 'webform', 'includes/webform.components');
+      module_load_include('inc', 'webform', 'includes/webform.submissions');
+      $has_flag = load_flag_fields_from_flag_name($form['flag_name']['#value'], $form['action']['#value']);
+      if ($has_flag->ffid) {
+        $node = node_load($has_flag->webform_nid);
+
+        // Start of loading webform
+        $submission = array();
+        $is_draft = FALSE;
+        $filter = TRUE;
+        // If in a multi-step form, a submission ID may be specified in form state.
+        // Load this submission. This allows anonymous users to use auto-save.
+        if (empty($submission) && !empty($form_state['values']['details']['sid'])) {
+          $submission = webform_get_submission($node->nid, $form_state['values']['details']['sid']);
+          $is_draft = $submission->is_draft;
+        }
+
+        // Bind arguments to $form to make them available in theming and form_alter.
+        $form['#node'] = $node;
+        $form['#submission'] = $submission;
+        $form['#is_draft'] = $is_draft;
+        $form['#filter'] = $filter;
+
+        // Add a theme function for this form.
+        $form['#theme'] = array('webform_form_' . $node->nid, 'webform_form');
+
+        // Add a css class for all client forms.
+        $form['#attributes'] = array('class' => 'webform-client-form');
+
+        // Set the encoding type (necessary for file uploads).
+        $form['#attributes']['enctype'] = 'multipart/form-data';
+
+        if (is_array($node->webform['components']) && !empty($node->webform['components'])) {
+          // Prepare a new form array.
+          $form['submitted'] = array(
+            '#tree' => TRUE
+          );
+          $form['details'] = array(
+            '#tree' => TRUE,
+          );
+
+          // Put the components into a tree structure.
+          if (!isset($form_state['storage']['component_tree'])) {
+            $form_state['webform']['component_tree'] = array();
+            $form_state['webform']['page_count'] = 1;
+            $form_state['webform']['page_num'] = 1;
+            _webform_components_tree_build($node->webform['components'], $form_state['webform']['component_tree'], 0, $form_state['webform']['page_count']);
+          }
+          else {
+            $form_state['webform']['component_tree'] = $form_state['storage']['component_tree'];
+            $form_state['webform']['page_count'] = $form_state['storage']['page_count'];
+            $form_state['webform']['page_num'] = $form_state['storage']['page_num'];
+          }
+
+          // Shorten up our variable names.
+          $component_tree = $form_state['webform']['component_tree'];
+          $page_count = $form_state['webform']['page_count'];
+          $page_num = $form_state['webform']['page_num'];
+
+          // Recursively add components to the form.
+          foreach ($component_tree['children'] as $cid => $component) {
+            $component_value = isset($form_state['values']['submitted'][$cid]) ? $form_state['values']['submitted'][$cid] : NULL;
+            if (_webform_client_form_rule_check($node, $component, $page_num, $form_state)) {
+              _webform_client_form_add_component($node, $component, $component_value, $form['submitted'], $form, $form_state, $submission, 'form', $page_num, $filter);
+            }
+          }
+
+          // These form details help managing data upon submission.
+          $form['details']['nid'] = array(
+            '#type' => 'value',
+            '#value' => $node->nid,
+          );
+          $form['details']['sid'] = array(
+            '#type' => 'hidden',
+            '#value' => isset($submission->sid) ? $submission->sid : '',
+          );
+          $form['details']['uid'] = array(
+            '#type' => 'value',
+            '#value' => isset($submission->uid) ? $submission->uid : $user->uid,
+          );
+          $form['details']['page_num'] = array(
+            '#type'  => 'hidden',
+            '#value' => $page_num,
+          );
+          $form['details']['page_count'] = array(
+            '#type'  => 'hidden',
+            '#value' => $page_count,
+          );
+          $form['details']['finished'] = array(
+            '#type' => 'hidden',
+            '#value' => isset($submission->is_draft) ? (!$submission->is_draft) : 0,
+          );
+        }
+        $form['#validate'] = array('webform_client_form_validate');
+        array_unshift($form['#submit'], '_flag_fields_custom_flag_confirm_submit');
+        // End of loading webform
+      }
+      break;
+  }
+}
+
+/******************************************************************************************
+ * Modules functions                                                                      *
+ ******************************************************************************************/
+
+/**
+ * Custom submit function to call webform submit function.
+ * @param Array $form
+ * @param Array $form_state
+ */
+function _flag_fields_custom_flag_confirm_submit(&$form, &$form_state) {
+  webform_client_form_pages($form, $form_state);
+  webform_client_form_submit($form, $form_state);
+}
+
+/**
+ * Callback function for admin/build/flag_fields
+ */
+function flag_fields_listing() {
+  return drupal_get_form('flag_field_display_form');
+}
+
+/**
+ * Callback function for admin/build/flag_fields/%
+ */
+function flag_fields_view($flag_fields) {
+  return drupal_get_form('flag_field_display_form', 1);
+}
+
+/**
+ * Callback function for delete flag_field
+ * @param Array $form_state
+ * @param Array $flag_field
+ *
+ * @see
+ *   flag_fields_delete_confirm_submit
+ */
+function flag_fields_delete_confirm(&$form_state, $flag_field) {
+  $form = array();
+  $form['ffid'] = array(
+    '#type' => 'hidden',
+    '#value' => arg(3),
+  );
+  $form['submit'] = array(
+    '#type' => 'submit',
+    '#value' => t('Delete'),
+  );
+  $form['cancel'] = array(
+    '#type' => 'item',
+    '#value' => l('Cancel', FLAG_FIELDS),
+  );
+  return $form;
+}
+
+/**
+ * Submit handler for delete flag_field
+ * @param Array $form_state
+ * @param Array $flag_field
+ *
+ * @see
+ *   flag_fields_delete_confirm
+ */
+function flag_fields_delete_confirm_submit($form, &$form_state) {
+  if (!db_query('DELETE FROM {flag_fields} WHERE ffid = %d', $form_state['values']['ffid'])) {
+    drupal_set_message('Unable to delete Flag Field Map', 'error');
+  }
+  drupal_goto(FLAG_FIELDS);
+}
+
+/**
+ * Helper function to define form to render all flags and webforms
+ *
+ * @see
+ *   flag_field_display_form_validate
+ *   flag_field_display_form_submit
+ */
+function flag_field_display_form() {
+  $form = array();
+  // If edit page then show more fields
+  if (arg(3)) {
+    drupal_set_title('Edit Flag Fields Mapping');
+    $flags_fields = load_flag_fields(arg(3));
+    $form['ffid'] = array(
+      '#type' => 'hidden',
+      '#value' => arg(3),
+      '#weight' => 1,
+    );
+    $form['cancel'] = array(
+      '#type' => 'item',
+      '#value' => l('Cancel', FLAG_FIELDS),
+      '#weight' => 7,
+    );
+  }
+  else {
+    drupal_set_title('Flag Fields Mapping');
+    $header = array(
+      'flag' => t('Flag Name'),
+      'flag_unflag' => t('Flag Actions'),
+      'webform' => t('Webform Name'),
+      'actions' => array(
+        'data' => t('Actions'),
+        'colspan' => '2',
+        'class' => 'flag-fields-actions'
+      ),
+    );
+    $query = db_query('SELECT * FROM {flag_fields}');
+    while ($result = db_fetch_object($query)) {
+      $rows[] = array(
+        db_result(db_query('SELECT title FROM {flags} WHERE name = "%s"', $result->flag_name)),
+        $result->flag_unflag,
+        db_result(db_query('SELECT title FROM {node} WHERE nid = %d', $result->webform_nid)),
+        l('Edit', FLAG_FIELDS . '/' . $result->ffid),
+        l('Delete', FLAG_FIELDS . '/' . $result->ffid . '/delete'),
+      );
+    }
+    if (count($rows) > 0) {
+      $output = theme('table', $header, $rows);
+    } // else show empty text.
+    else {
+      $output = 'No Content found.';
+    }
+    $form['flag_fields_list'] = array(
+      '#type' => 'item',
+      '#value' => $output,
+      '#weight' => 2,
+    );
+  }
+  $flags = render_all_flags(arg(3));
+  $webforms = render_all_webforms(arg(3));
+  $form['flags'] = array(
+    '#type' => 'select',
+    '#title' => t('Flags'),
+    '#options' => $flags,
+    '#default_value' => $flags_fields->flag_name,
+    '#required' => TRUE,
+    '#description' => t(''),
+    '#weight' => 3,
+  );
+  $form['flag_unflag'] = array(
+    '#type' => 'select',
+    '#title' => t('Flag Action'),
+    '#default_value' => $flags_fields->flag_unflag,
+    '#options' => array(
+      'flag' => 'Flag',
+      'unflag' => 'Unflag',
+    ),
+    '#required' => TRUE,
+    '#description' => t(''),
+    '#weight' => 4,
+  );
+  $form['webforms'] = array(
+    '#type' => 'select',
+    '#title' => t('Webforms'),
+    '#default_value' => $flags_fields->webform_nid,
+    '#options' => $webforms,
+    '#required' => TRUE,
+    '#description' => t(''),
+    '#weight' => 5,
+  );
+  $form['submit'] = array(
+    '#type' => 'submit',
+    '#value' => t('Save'),
+    '#weight' => 6,
+  );
+  return $form;
+}
+
+/**
+ * Validate function for flag_field_display_form_submit
+ * @param Array $form
+ * @param Array $form_state
+ *
+ * @see
+ *   flag_field_display_form
+ *   flag_field_display_form_submit
+ */
+function flag_field_display_form_validate($form, &$form_state) {
+  if (!$form_state['values']['ffid']) {
+    $result = db_result(db_query('SELECT count(*) FROM {flag_fields} WHERE flag_name = "%s" AND flag_unflag = "%s"',
+      $form_state['values']['flags'], $form_state['values']['flag_unflag']));
+    if ($result) {
+      form_set_error('flags', 'Selected Flag map already exists.');
+    }
+  }
+}
+
+/**
+ * Submit handler for flag_field_display_form_submit
+ * @param Array $form
+ * @param Array $form_state
+ *
+ * @see
+ *   flag_field_display_form
+ *   flag_field_display_form_validate
+ */
+function flag_field_display_form_submit($form, &$form_state) {
+  if ($form_state['values']['ffid']) {
+    db_query("UPDATE {flag_fields} SET flag_name = '%s', flag_unflag = '%s', webform_nid = %d WHERE ffid = %d",
+      $form_state['values']['flags'], $form_state['values']['flag_unflag'], $form_state['values']['webforms'],
+      $form_state['values']['ffid']);
+    drupal_set_message('Record Updated successfully');
+  }
+  else {
+    db_query("INSERT INTO {flag_fields} (flag_name, flag_unflag, webform_nid) VALUES ('%s', '%s', %d)",
+      $form_state['values']['flags'], $form_state['values']['flag_unflag'], $form_state['values']['webforms']);
+    drupal_set_message('New Flag field mapping created');
+  }
+  drupal_goto(FLAG_FIELDS);
+}
+
+/**
+ * Helper function to load flag_fields details depending on ffid provided to it
+ * @param Int $ffid
+ *   Flag field id
+ */
+function load_flag_fields($ffid) {
+  $flag_fields_query = db_query('SELECT * FROM {flag_fields} WHERE ffid = %d', $ffid);
+  while ($flag_fields_result = db_fetch_object($flag_fields_query)) {
+    $flag_fields->ffid = $flag_fields_result->ffid;
+    $flag_fields->flag_name = $flag_fields_result->flag_name;
+    $flag_fields->flag_unflag = $flag_fields_result->flag_unflag;
+    $flag_fields->webform_nid = $flag_fields_result->webform_nid;
+  }
+  return $flag_fields;
+}
+
+/**
+ * Helper function to load flag_fields details depending on flag name and flag/unflag provided
+ * @param String $flag_name
+ *   Flag name
+ * @param String $flag_unflag
+ *   Flag/Unflag action
+ */
+function load_flag_fields_from_flag_name($flag_name, $flag_unflag) {
+  $flag_fields_query = db_query('SELECT * FROM {flag_fields} WHERE flag_name = "%s" AND flag_unflag = "%s"',
+    $flag_name, $flag_unflag);
+  while ($flag_fields_result = db_fetch_object($flag_fields_query)) {
+    $flag_fields->ffid = $flag_fields_result->ffid;
+    $flag_fields->flag_name = $flag_fields_result->flag_name;
+    $flag_fields->flag_unflag = $flag_fields_result->flag_unflag;
+    $flag_fields->webform_nid = $flag_fields_result->webform_nid;
+  }
+  return $flag_fields;
+}
+
+/**
+ * Helper function to render a list of all flags available.
+ * @param Int $has_arg3
+ *   arg(3) of current page (if available)
+ */
+function render_all_flags($has_arg3 = NULL) {
+  // If not edit page then only show select none
+  if (!$has_arg3) {
+    $flags[''] = '--Select None--';
+  }
+  $flags_query = db_query('SELECT name, title FROM {flags}');
+  while ($flags_result = db_fetch_object($flags_query)) {
+    // If viewing edit page then return all value, else ignore flags which are already mapped for flag and unflag
+    if ($has_arg3) {
+      $flags[$flags_result->name] = $flags_result->title;
+    }
+    else {
+      // If flag map count is 2 then do not show that flag name here.
+      $flag_map_count = db_result(db_query('SELECT count(*) FROM {flag_fields} WHERE flag_name = "%s"', $flags_result->name));
+      if ($flag_map_count < 2) {
+        $flags[$flags_result->name] = $flags_result->title;
+      }
+    }
+  }
+  return $flags;
+}
+
+/**
+ * Helper function to render list of webforms available in system
+ *
+ * @param Int $has_arg3
+ *   arg(3) of current page (if available)
+ */
+function render_all_webforms($has_arg3 = NULL) {
+  // If not edit page then only show select none
+  if (!$has_arg3) {
+    $webforms[''] = '--Select None--';
+  }
+  $webforms_query = db_query('SELECT nid, title FROM {node} WHERE type = "webform"');
+  while ($webforms_result = db_fetch_object($webforms_query)) {
+    $webforms[$webforms_result->nid] = $webforms_result->title;
+  }
+  return $webforms;
+}

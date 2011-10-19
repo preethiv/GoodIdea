@@ -1,0 +1,44 @@
+<?php
+// $Id: custom_forms.install,v 1.0 2011/09/07 vyasamit2007 Exp $
+
+/**
+ * @file
+ * Contains install and update functions for custom_forms.
+ */
+/**
+ * Implementation of hook_install()
+ */
+function custom_forms_install() {
+  drupal_install_schema('custom_forms');
+}
+
+/**
+ * Implementation of hook_uninstall()
+ */
+function custom_forms_uninstall() {
+  drupal_uninstall_schema('custom_forms');
+}
+
+/**
+ * Implementation of hook_schemea
+ */
+function custom_forms_schema() {
+  $schema['custom_request_page_titles'] = array(
+    'description' => 'Page Titles which are requested for creating a page',
+    'fields' => array(
+      'uid' => array(
+        'type' => 'varchar',
+        'length' => '128',
+        'description' => 'The user who has requested for a page.',
+        'not null' => TRUE,
+      ),
+      'title' => array(
+        'type' => 'varchar',
+        'length' => '255',
+        'description' => 'The title which page needs to be created.',
+      ),
+    ),
+    'primary key' => array('title'),
+  );
+  return $schema;
+}

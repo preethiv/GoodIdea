@@ -1,0 +1,742 @@
+<?php
+
+/**
+ * @file
+ * List of recent changes over all node revisions and comments
+ */
+
+/**
+ * Implementation of hook_perm().
+ */
+function recent_changes_perm() {
+  return array('access recent changes');
+}
+
+/**
+ * Implementation of hook_help().
+ */
+function recent_changes_help($path, $arg) {
+  switch ($path) {
+    case 'admin/help#recent_changes':
+      $output = '<p>'.t('The recent changes module offers a page which shows all recent changes on nodes. The page can be viewed by anyone with the <em>access content</em> permission, but no content is shown for node types the user has no permissions for. If you have the <em>diff</em> module installed, a link to the diff-view will be offered in the table. A feed of all recent changes, or per content type is also available. Headers of inaccessible content can be shown in feeds, depending on the settings in the recent changes administrative page.').'</p>';
+      return $output;
+      break;
+   }
+}
+
+/**
+ * Implementation of hook_menu().
+ */
+function recent_changes_menu() {
+  $items = array();
+  $items['recent_changes'] = array(
+    'title' => t('Recent changes'),
+    'description' => t('List of recent changes'),
+    'page callback' => 'recent_changes_view',
+    'access arguments' => array('access recent changes'),
+    'type' => MENU_NORMAL_ITEM,
+  );
+  $items['admin/settings/recent_changes'] = array(
+    'title' => t('Recent changes'),
+    'description' => t('Adjust the settings of the recent changes page and feed.'),
+    'page callback' => 'drupal_get_form',
+    'page arguments' => array('recent_changes_admin_settings'),
+    'access arguments' => array('administer site configuration'),
+    'type' => MENU_NORMAL_ITEM,
+  );
+  return $items;
+}
+
+/**
+ * Settings form
+ */
+function recent_changes_admin_settings() {
+  $form = array();
+
+  $form['general_settings'] = array(
+    '#type' => 'fieldset',
+    '#title' => t('Recent changes general settings'),
+    '#collapsible' => TRUE,
+    '#collapsed' => FALSE,
+    '#weight' => -3
+  );
+  $form['general_settings']['recent_changes_allowed_node_types'] = array(
+    '#type' => 'select',
+    '#title' => t('Allowed content types'),
+    '#default_value' => variable_get('recent_changes_allowed_node_types', array()),
+    '#options' => node_get_types('names'),
+    '#multiple' => TRUE,
+    '#description' => t('Select the content types that will be shown on the recent changes page and in recent changes feeds. Select none to list all content types. Note that nodes or comments that are inaccessible to a user will not be listed on his or her recent changes page, but headers of inaccessible nodes and comments might show up in recent changes feeds, depending on the settings below.'),
+  );
+  $form['general_settings']['recent_changes_show_comments']= array(
+    '#type' => 'checkbox',
+    '#title' => t('Show comments'),
+    '#return_value' => 2,
+    '#default_value' => variable_get('recent_changes_show_comments', TRUE),
+    '#description' => t('Add a comments option to the content type filter on the recent changes page. To enable the selection of comments for a certain content type in the content type filter, you should enable multiple filter selection below.'),
+  );
+  $form['page_settings'] = array(
+    '#type' => 'fieldset',
+    '#title' => t('Recent changes page settings'),
+    '#collapsible' => TRUE,
+    '#collapsed' => FALSE,
+    '#weight' => -2
+  );
+  $form['page_settings']['recent_changes_entries_per_page']= array(
+    '#type' => 'textfield',
+    '#title' => t('Entries per page'),
+    '#size' => 5,
+    '#maxlength' => 4,
+    '#default_value' => variable_get('recent_changes_entries_per_page', 50),
+    '#description' => t('The number of entries per page'),
+  );
+  $form['page_settings']['recent_changes_show_filter']= array(
+    '#type' => 'checkbox',
+    '#title' => t('Show content type filter'),
+    '#return_value' => 1,
+    '#default_value' => variable_get('recent_changes_show_filter', TRUE),
+    '#description' => t('Enable to show the content type filter on top of the recent changes page'),
+  );
+  $form['page_settings']['recent_changes_type_select_size'] = array(
+    '#type' => 'select',
+    '#title' => t('Number of visible content types in content type filter'),
+    '#default_value' => variable_get('recent_changes_type_select_size', 5),
+    '#options' => drupal_map_assoc(array(1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 15, 20, 25, 30)),
+    '#description' => t('The number of rows that will be displayed in the content type filter. Hint: select 1 in case multiple selection is disabled!'),
+  );
+  $form['page_settings']['recent_changes_allow_multiple_filter']= array(
+    '#type' => 'checkbox',
+    '#title' => t('Allow multiple content type selection'),
+    '#return_value' => 1,
+    '#default_value' => variable_get('recent_changes_allow_multiple_filter', TRUE),
+    '#description' => t('Allow multiple selection in the content type filter.'),
+  );
+  $form['feed_settings'] = array(
+    '#type' => 'fieldset',
+    '#title' => t('Recent changes feed settings'),
+    '#collapsible' => TRUE,
+    '#collapsed' => FALSE,
+    '#weight' => -1,
+    '#description' => t('A feed is available for the recent items page. Links to feeds per content type are also available when a single content type is selected in the content type filter.'),
+  );
+  $form['feed_settings']['recent_changes_list_inacces_revisions_in_feeds']= array(
+    '#type' => 'checkbox',
+    '#title' => t('List inaccessible revisions'),
+    '#return_value' => 1,
+    '#default_value' => variable_get('recent_changes_list_inacces_revisions_in_feeds', TRUE),
+    '#description' => t('Usually no login takes place when the recent changes feed is accessed, which means that older revisions might not be accessible. Enable this option to list revisions in feeds even if the \'view revisions\' permission is disabled for anonymous users. Note that titles of inaccessible content can be replaced by \'access denied\' messages by disabling the checkbox below.'),
+  );
+  $form['feed_settings']['recent_changes_list_inacces_nodes_in_feeds']= array(
+    '#type' => 'checkbox',
+    '#title' => t('List inaccessible nodes'),
+    '#return_value' => 1,
+    '#default_value' => variable_get('recent_changes_list_inacces_nodes_in_feeds', TRUE),
+    '#description' => t('Usually no login takes place when the recent changes feed is accessed, which means certain content types might be inaccessible. Enable this option to list inaccessible nodes in feeds. Note that titles of inaccessible content can be replaced by \'access denied\' messages by disabling the checkbox below.'),
+  );
+  $form['feed_settings']['recent_changes_show_access_denied_titles']= array(
+    '#type' => 'checkbox',
+    '#title' => t('Show titles of inaccessible content'),
+    '#return_value' => 1,
+    '#default_value' => variable_get('recent_changes_show_access_denied_titles', TRUE),
+    '#description' => t('Usually no login takes place when the recent changes feed is accessed, which means certain nodes, comments or revisions migth be inaccessible. Enable this option to show the titles of inaccessible nodes. Note that the content of inaccessible nodes will never be displayed in feeds.'),
+  );
+  $form['feed_settings']['recent_changes_show_diff']= array(
+    '#type' => 'checkbox',
+    '#title' => t('Show diffs in feeds'),
+    '#return_value' => 1,
+    '#default_value' => variable_get('recent_changes_show_diff', TRUE),
+    '#description' => t('When the diff module is installed and the length of XML items (see below) is set to \'Full text\', the difference between a revision of a node and its predecessor can be shown. Check this box to enable this feature.'),
+  );
+  $form['feed_settings']['recent_changes_feed_default_items'] = array(
+    '#type' => 'select',
+    '#title' => t('Number of items per feed'),
+    '#default_value' => variable_get('recent_changes_feed_default_items', 10),
+    '#options' => drupal_map_assoc(array(1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 15, 20, 25, 30)),
+    '#description' => t('The default number of items to include in the recent changes feed.'),
+  );
+  $form['feed_settings']['recent_changes_feed_item_type']= array(
+    '#type' => 'select',
+    '#title' => t('Display of XML feed items'),
+    '#default_value' => variable_get('recent_changes_feed_item_type', 'teaser'),
+    '#options' => array('title' => 'Titles only', 'teaser' => 'Titles plus teaser', 'fulltext' => 'Full text'),
+    '#multiple' => FALSE,
+    '#description' => t('The length of XML items in the recent changes feed.'),
+  );
+
+  return system_settings_form($form);
+}
+
+/**
+ * Menu callback.
+ */
+function recent_changes_view() {
+  // Print feed if requested or display normal page otherwise
+  if (arg(1) === 'feed') {
+     return recent_changes_feed(arg(2));
+  }
+  else {
+    return recent_changes_page();
+  }
+}
+
+/**
+ * Page display of recent changes.
+ */
+function recent_changes_page() {
+  $node_types = ($_REQUEST['op'] === t('Filter')) ? _recent_changes_parse_node_types($_REQUEST['recent_changes_filter_node_types']) : _recent_changes_parse_node_types();
+
+  // Unset the page in pager query if the filter button was pressed.
+  if ($_POST['op'] === t('Filter')) {
+    unset($_GET['page']);
+  }
+
+  // Initialize
+  $output = '';
+  $day = -1;
+  $rows = array();
+
+  // Add rss feed and stylesheet to page.
+  drupal_add_css(drupal_get_path('module', 'recent_changes').'/recent_changes.css');
+
+  // Add feed
+  if (count($node_types) == 1) {
+    // Single node type was selected in filter
+    drupal_add_feed(url('recent_changes/feed/' . $node_types[0], array('absolute' => TRUE)), t('Recent changes of !site filtered by content type !node_type', array('!site' => variable_get('site_name', 'drupal'), '!node_type' => $node_type_name = _recent_changes_node_type_name($node_types[0]))));
+  }
+  else {
+    drupal_add_feed(url('recent_changes/feed', array('absolute' => TRUE)), t('Recent changes of !site', array('!site' => variable_get('site_name', 'drupal'))));
+  }
+
+  // Show filter if enabled
+  $output .= (variable_get('recent_changes_show_filter', TRUE)) ? drupal_get_form('recent_changes_filter_form') : '';
+
+  // Header for recent changes table.
+  $header = array('', '', t('Type'), t('Title'), t('User'), t('Log'));
+
+  // SQL results provided by pager implementation
+  list($sql, $count_sql) = _recent_changes_query($node_types, user_access('view revisions'));
+  $sql_results = pager_query($sql, variable_get('recent_changes_entries_per_page', 50), 0, $count_sql);
+
+  // put database results in $results
+  $results = array();
+  while ($db_item = db_fetch_object($sql_results)) {
+    $results[] = $db_item;
+  }
+
+  // parse results into items
+  $items = _recent_changes_parse_results($results);
+
+  foreach ($items as $item) {
+    // Check if day of week changed and if yes output the new day.
+    $current_day = format_date($item->timestamp, 'custom', 'z');
+    if ($day != $current_day) {
+      $day = $current_day;
+      $rows[] = array(
+        array(
+          'data' => format_date($item->timestamp, 'custom', 'D, j F Y'),
+          'colspan' => '6',
+          'class' => 'date'
+        )
+      );
+    }
+
+    // Add the items
+    $rows[] = array(
+      $item->op_link,
+      format_date($item->timestamp, 'custom', 'H:i'),
+      $item->node_type_name,
+      '<span class="change-flag">' . $item->flag . '</span> ' . call_user_func_array('l', array_merge(array($item->item_title), $item->link_array)) . (($item->item_title_add) ? '<br/>'. $item->item_title_add : ''),
+      $item->user_link,
+      $item->log_text,
+    );
+  }
+
+  // Print table and pager
+  $output .= theme('table', $header, $rows, array('class' => 'recent-changes'));
+  $output .= theme('pager', NULL, variable_get('recent_changes_entries_per_page', 50), 0);
+  return($output);
+}
+
+/**
+ * RSS feed of recent changes.
+ */
+function recent_changes_feed($node_types = NULL) {
+  global $base_url;
+
+  $list_inaccess_content = variable_get('recent_changes_list_inacces_nodes_in_feeds', TRUE);
+  $node_types = ($list_inaccess_content) ? _recent_changes_array_node_types($node_types) : _recent_changes_parse_node_types($node_types);
+  $show_access_denied_titles = variable_get('recent_changes_show_access_denied_titles', TRUE);
+  $item_type = variable_get('recent_changes_feed_item_type', 'teaser');
+  $teaser = ($item_type == 'teaser');
+  $load_revisions = user_access('view revisions') || variable_get('recent_changes_list_inacces_revisions_in_feeds', TRUE);
+
+  // perform sql query
+  list($sql, $count_sql) = _recent_changes_query($node_types, $load_revisions);
+  $sql_results = db_query($sql . " LIMIT %d", variable_get('recent_changes_feed_default_items', 10));
+
+  // put database results in $results
+  $results = array();
+  while ($db_item = db_fetch_object($sql_results)) {
+    $results[] = $db_item;
+  }
+
+  // parse results into items
+  $items = _recent_changes_parse_results($results);
+
+  // initialize
+  $namespaces = array('xmlns:dc="http://purl.org/dc/elements/1.1/"');
+  $feed_output = '';
+
+  foreach ($items as $item) {
+    $is_comment = ($item->cid != 0);
+
+    $text = '';
+    $item->url_array[1]['absolute'] = TRUE;
+    $url = call_user_func_array('url', $item->url_array);
+    $title = '(' . $item->flag . ') ' . $item->node_type_name . ': ' . $item->item_title;
+    $extra = array();
+
+    // load node to check node access, and check access if the loaded node is an older revision
+    $node = node_load($item->nid, $item->vid);
+    $view_revision_by_content_type_permission = 'view revisions of '. check_plain($node->type) .' content';
+    $node_access = node_access('view', $node) && ($item->is_current_revision || user_access('view revisions') || user_access($view_revision_by_content_type_permission));
+
+    $prev_revision = ($item->prev_revision) ? node_load($item->nid, $item->prev_revision->vid) : NULL;
+    $prev_revision_access = ($prev_revision) ? (node_access('view', $prev_revision) && user_access('view revisions')) : FALSE;
+
+    $load_diff = module_exists('diff') && variable_get('recent_changes_show_diff', TRUE) && !$is_comment && $prev_revision_access && ($item_type == 'fulltext');
+    $load_node_text = $node_access && ($item_type != 'title') && !$load_diff;
+
+    // load node or comment body text
+    if ($load_node_text) {
+      if ($is_comment) {
+        $body_text = $item->comment_text;
+        $teaser_text = node_teaser($body_text, $node->format);
+        $node->body = check_markup($body_text, $node->format, FALSE);
+        $node->teaser = check_markup($teaser_text, $node->format, FALSE);
+        $node->readmore = ($teaser && (strlen($teaser_text) < strlen($body_text)));
+      }
+      else {
+        $node = (node_hook($node, 'view')) ? node_invoke($node, 'view', $teaser, FALSE) : node_prepare($node, $teaser);
+        node_invoke_nodeapi($node, 'view', $teaser, FALSE);
+        $extra = node_invoke_nodeapi($node, 'rss item');
+      }
+    }
+
+    // load diff
+    if($load_diff) {
+      $node->body = _recent_changes_get_diff($node, $prev_revision);
+    }
+
+    // check access for content and title
+    if (!$node_access) {
+      $node->body = t('You are not authorized to access this item.');
+      $node->teaser = t('You are not authorized to access this item.');
+      $title = ($show_access_denied_titles) ? $title : t('Access denied');
+    }
+
+    // add additional info at the first line of the body text
+    if (($item->item_title_add) && ($node_access || $show_access_denied_titles)) {
+      $text = '<p><em>' . (($is_comment) ? t('Comment') . ' ' . $item->item_title_add : ucfirst($item->item_title_add)) . '</em></p><hr/>';
+    }
+
+    // set the body text
+    switch ($item_type) {
+      case 'fulltext':
+        $text .= $node->body;
+        break;
+      case 'teaser':
+        $text .= $node->teaser;
+        if ($node->readmore) {
+          $text .= '<p>'. l(t('read more'), 'node/'. $node->nid, array('fragment' => ($is_comment) ? "comment-$item->cid" : NULL, 'absolute' => TRUE)) .'</p>';
+        }
+        break;
+      case 'title':
+        $text .= '';
+        break;
+    }
+
+    // put in normal extra information
+    $extra = array_merge($extra,
+      array(
+        array('key' => 'pubDate', 'value' =>  date('r', $item->timestamp)),
+        array('key' => 'dc:creator', 'value' => $item->user_name),
+        array('key' => 'guid', 'value' => $item->nid .' at '. $base_url . (($is_comment) ? ' comment '.$item->cid : ' revision '.$item->vid), 'attributes' => array('isPermaLink' => 'false')),
+      )
+    );
+
+    $feed_output .= format_rss_item($title, $url, $text, $extra);
+
+    // Add namespaces
+    foreach ($extra as $element) {
+      if ($element['namespace']) {
+        $namespaces = array_merge($namespaces, $element['namespace']);
+      }
+    }
+  }
+
+  // RSS channel information
+  $single_node_type = count($node_types) == 1;
+  $filter_text = ($single_node_type) ? ' filtered by '. _recent_changes_node_type_name($node_types[0]) : '';
+  $channel = array(
+    'version'     => '2.0',
+    'link'        => $base_url,
+    'title'       => variable_get('site_name', 'drupal') .' - ' . t('Recent changes') . $filter_text,
+    'description' => t('Recent changes of nodes and comments on %site', array('%site' => variable_get('site_name', 'drupal'))),
+    'language'    => $GLOBALS['locale'],
+  );
+
+  // Construct actual RSS feed text
+  $output = "<?xml version=\"1.0\" encoding=\"utf-8\"?>\n";
+  $output .= "<rss version=\"". $channel["version"] . "\" xml:base=\"". $base_url ."\" ". implode(' ', $namespaces) .">\n";
+  $output .= format_rss_channel($channel['title'], $channel['link'], $channel['description'], $feed_output, $channel['language']);
+  $output .= "</rss>\n";
+
+  // Set MIME type in HTML header
+  drupal_set_header('Content-Type: application/rss+xml; charset=utf-8');
+
+  // Print feed text
+  print $output;
+}
+
+/**
+ * Parsing of recent changes results
+ */
+function _recent_changes_parse_results($results) {
+  // initialize
+  $has_revisions = array();
+  $nids = array();
+  $items = array();
+  $access_revisions = user_access('view revisions');
+  $exists_diff = module_exists('diff');
+
+  // put node nids in the the nids array (needed for querying previous revisions on this page)
+  foreach ($results as $result) {
+    $nids[$result->nid] = TRUE;
+  }
+
+  // get previous revisions
+  $all_node_nid = implode(", ", array_keys($nids, TRUE));
+  $where_nid = ($all_node_nid) ? "WHERE n.nid IN ($all_node_nid)" : "WHERE FALSE";
+  $revisions_result = db_query("SELECT n.nid, n.vid AS curr_vid, p.vid, p.title FROM {node_revisions} n LEFT JOIN {node_revisions} p ON ((n.nid = p.nid) AND (n.vid > p.vid)) $where_nid ORDER BY p.vid DESC");
+
+  while ($revision = db_fetch_object($revisions_result)) {
+    $curr_vid = $revision->curr_vid;
+    if(is_null($revision->vid)) {
+      break;
+    }
+    $has_revisions[$revision->nid] = TRUE;
+    $prev_revisions[$curr_vid] = (!isset($prev_revisions[$curr_vid])) ? $revision : $prev_revisions[$curr_vid];
+  }
+
+  // parse results
+  foreach ($results as $result) {
+    $is_comment = ($result->cid != 0);
+    if (isset($prev_revisions[$result->vid])) {
+      $prev_revision = $prev_revisions[$result->vid];
+    }
+    else {
+      $prev_revision = new stdClass();
+      $prev_revision->vid = 0;
+      $prev_revision->title = '';
+    }
+
+    // the owner is the user specified in the {node} table (also called "author" in drupal terminology)
+    $owner_user->uid = $result->uid;
+    $owner_user->name = $result->name;
+
+    // the active user is the user that performed the update, or posted the revision or comment
+    $active_user->uid = $result->auid;
+    $active_user->name = $result->aname;
+
+    $is_current_revision = $result->vid == $result->cvid;
+    $show_revisions = $access_revisions && isset($has_revisions[$result->nid]) && $has_revisions[$result->nid];
+    $show_diff_link = $prev_revision->vid && $exists_diff && $access_revisions;
+    $moved = !$is_comment && $prev_revision->vid && ($prev_revision->title !== $result->title);
+
+    $flags = array(
+      'comment' => $is_comment,
+      'updated' => !$is_comment && !$prev_revision->vid && ($result->timestamp != $result->created),
+      'new' => !$is_comment && !$prev_revision->vid && ($result->timestamp == $result->created),
+      'revised' => !$is_comment && $prev_revision->vid && ($prev_revision->title === $result->title),
+      'moved' => $moved,
+    );
+
+    $comment_link = l('(comment)', "node/$result->nid", array('fragment' => "comment-$result->cid"));
+    $operations = ($show_diff_link) ? l('(diff)', "node/$result->nid/revisions/view/$prev_revision->vid/$result->vid") : '(diff)';
+    $operations .= '&nbsp;'. (($show_revisions) ? l('(hist)', "node/$result->nid/revisions") : '(hist)');
+
+    $result_title = ($is_comment) ? $result->subject : $result->title;
+    $result_link = array("node/$result->nid" . (($is_comment || $is_current_revision) ? '' : "/revisions/$result->vid/view"), array('fragment' => ($is_comment) ? "comment-$result->cid" : NULL));
+    $result_url =  array("node/$result->nid" . (($is_comment || $is_current_revision) ? '' : "/revisions/$result->vid/view"), array('fragment' => ($is_comment) ? "comment-$result->cid" : NULL ));
+
+    $owner_intro_text = ($moved && $access_revisions) ? ', ' . t('from') . ' ' : t('author') . ': ';
+    $result_title_add = ($moved && $access_revisions) ? t('source: ') . l($prev_revision->title, "node/$result->nid/revisions/$prev_revision->vid/view") : '';
+    $result_title_add .= (!$is_comment && ($result->uid != $result->auid)) ? $owner_intro_text . theme('username', $owner_user) : '';
+    $result_title_add .= ($is_comment) ? t('on') . ' ' . l($result->title, "node/$result->nid") . ' ' . t('from') . ' ' . theme('username', $owner_user) : '';
+
+    $items[] = (object) array(
+      'is_current_revision' => $is_current_revision,
+      'cid' => $result->cid,
+      'nid' => $result->nid,
+      'vid' => $result->vid,
+      'prev_revision' => $prev_revision,
+      'op_link' => ($is_comment) ? $comment_link : $operations,
+      'timestamp' => $result->timestamp,
+      'node_type_name' => _recent_changes_node_type_name($result->type),
+      'flag' => t(array_search(TRUE, $flags)),
+      'item_title' => $result_title,
+      'link_array' => $result_link,
+      'url_array' => $result_url,
+      'item_title_add' => $result_title_add,
+      'user_link' => theme('username', $active_user),
+      'user_name' => $active_user->name,
+      'log_text' => filter_xss($result->log),
+      'comment_text' => $result->comment,
+    );
+  }
+
+  return($items);
+}
+
+/**
+ * Build SQL query depending on node type filter and comments filter.
+ * Inaccessible node types should already have been filtered out by this stage.
+ * If the load_revisions is false, only the recent changes from the {node} table are used, otherwise older revisions might also show up if they were recently changed.
+*/
+function _recent_changes_query($node_types, $load_revisions) {
+  // show comments
+  $comment_index = array_search('comment', $node_types);
+  $show_comments = (!is_bool($comment_index) && !is_null($comment_index));
+
+  // if only comments is selected, show comments for all allowed node types
+  $comments_only = (count($node_types) == 1 && $node_types[0] === 'comment');
+  $node_types = $comments_only ? _recent_changes_parse_node_types() : $node_types;
+
+  // construct node type query (note that leading and trailing single quotes (') need to be added later)
+  $where_type = implode("', '", $node_types);
+
+  // construct where queries depending on whether the revision, node, or comment should be displayed
+  $node_where = ($where_type && !$comments_only && !$load_revisions) ? "WHERE n.type IN ('$where_type')" : "WHERE FALSE";
+  $revision_where = ($where_type && !$comments_only && $load_revisions) ? "WHERE n.type IN ('$where_type')" : "WHERE FALSE";
+  $comment_where = ($where_type && $show_comments) ? "WHERE n.type IN ('$where_type')" : "WHERE FALSE";
+
+  // queries to get the selected nodes, comments and revisions for the selected node types
+  $nodes_query     = db_rewrite_sql("SELECT n.nid, n.vid, n.vid AS cvid, n.uid, u.name, r.title, '' AS log, n.created, r.timestamp, n.type, 0 AS cid, '' AS subject, '' AS comment, r.uid AS auid, a.name AS aname FROM {node} n LEFT JOIN {node_revisions} r ON n.vid = r.vid LEFT JOIN {users} u ON n.uid = u.uid LEFT JOIN {users} a ON r.uid = a.uid $node_where AND n.status >= 1");
+  $revisions_query = db_rewrite_sql("SELECT r.nid, r.vid, n.vid AS cvid, n.uid, u.name, r.title, r.log, n.created, r.timestamp, n.type, 0 AS cid, '' AS subject, '' AS comment, r.uid AS auid, a.name AS aname FROM {node_revisions} r LEFT JOIN {node} n ON r.nid = n.nid LEFT JOIN {users} u ON n.uid = u.uid LEFT JOIN {users} a ON r.uid = a.uid $revision_where AND n.status >= 1");
+  $comments_query  = db_rewrite_sql("SELECT c.nid, n.vid, n.vid AS cvid, n.uid, u.name, n.title, '' AS log, c.timestamp AS created, c.timestamp, n.type, c.cid, c.subject, c.comment, c.uid AS auid, c.name AS aname FROM {comments} c LEFT JOIN {node} n ON c.nid = n.nid LEFT JOIN {users} u ON n.uid = u.uid $comment_where AND n.status >= 1");
+
+  // counter queries
+  $node_count = db_rewrite_sql("SELECT COUNT(*) FROM {node} n $node_where AND n.status >= 1");
+  $revision_count = db_rewrite_sql("SELECT COUNT(*) FROM {node_revisions} r JOIN {node} n ON r.nid = n.nid $revision_where AND n.status >= 1");
+  $comment_count = db_rewrite_sql("SELECT COUNT(*) FROM {comments} c LEFT JOIN {node} n ON c.nid = n.nid $comment_where AND n.status >= 1");
+
+  // unify queries
+  $sql = "($nodes_query) UNION ALL ($revisions_query) UNION ALL ($comments_query) ORDER BY timestamp DESC";
+  $sql_count = "SELECT ($node_count) + ($revision_count) + ($comment_count)";
+
+  return(array($sql, $sql_count));
+}
+
+/**
+ * Form for input filter.
+ */
+function recent_changes_filter_form() {
+  $node_types = _recent_changes_parse_node_types();
+  $allow_multiple = variable_get('recent_changes_allow_multiple_filter', TRUE);
+  $default_value = ($_REQUEST['op'] === t('Filter')) ? $_REQUEST['recent_changes_filter_node_types'] : '';
+
+  // get associative array with content types and human-friendly content names
+  $node_names = array();
+  foreach ($node_types AS $type) {
+    $node_names[$type] = _recent_changes_node_type_name($type);
+  }
+
+  // content types have no weights, so we can safely sort them here
+  asort($node_names);
+
+  // add "All content types" if only single selection is allowed
+  $node_names = ($allow_multiple) ? $node_names : array_merge(array(FALSE => t('All content types')), $node_names);
+
+  $form = array();
+  $form['#attributes'] = array('class' => 'inline');
+
+  $form['recent_changes_filter_node_types'] = array(
+    '#type' => 'select',
+    '#title' => t('Filter content type'),
+    '#default_value' => $default_value,
+    '#options' => $node_names,
+    '#multiple' => $allow_multiple,
+    '#size' => min(count($node_names), variable_get('recent_changes_type_select_size', 5)),
+  );
+
+  $form['submit'] = array(
+    '#type' => 'button',
+    '#value' => t('Filter')
+  );
+
+  return $form;
+}
+
+/**
+ * Interface with the diff module. Returns a table with the differences between $node and $prev_revision
+ */
+function _recent_changes_get_diff($node, $prev_revision) {
+  // Check for diff module
+  if (!module_exists('diff')) {
+    return '';
+  }
+
+  // Crete diff
+  $rows = _diff_body_rows($prev_revision, $node);
+  $cols = _diff_default_cols();
+  $header = array();
+  $item_text = theme('diff_table', $header, $rows, array('class' => 'diff'), NULL, $cols);
+
+  // Replace css classes from diff with actual style elements since we cannot reference a css file from the rss feed.
+  $patterns = array(
+    '/class=["\']diff-marker["\']/',
+    '/class=["\']diff-content["\']/',
+    '/class=["\']diff-section-title["\']/',
+    '/class=["\']diff-deletedline["\']/',
+    '/class=["\']diff-addedline["\']/',
+    '/class=["\']diff-context["\']/',
+    '/class=["\']diffchange["\']/',
+  );
+
+  $replacements = array(
+    'style="width:1.4em;"',
+    'style="width:50%;"',
+    'style="background-color: #f0f0ff;"',
+    'style="background-color: #ffa;width: 50%"',
+    'style="background-color: #afa;width: 50%"',
+    'style="background-color: #fafafa"',
+    'style="color: #f00;font-weight:bold"',
+  );
+
+  $item_text = preg_replace($patterns, $replacements, $item_text);
+  $item_text .= "<hr/>\n";
+
+  return $item_text;
+}
+
+/**
+ * Removes the node types to which the user has no access
+ */
+function _recent_changes_access_check($node_types) {
+
+  // Check for each node type (and comments) whether current user has 'view' access to it
+  foreach ($node_types as $key=>$type) {
+    $access = FALSE;
+    if ($type == 'comment') {
+      $access = module_exists('comment') && user_access('access comments');
+    }
+    else {
+      $module = node_get_types('module', $type);
+      if ($module == 'node') {
+        $access = user_access('access content');
+      }
+      else {
+        // this would be the right way to implement access checks, but unfortunately most modules don't implement it
+        // This is not correct as the 'view' parameter also needs that a node object is passed.
+        // Only for 'create' parameters it is sufficent to pass a node type
+//        $access = module_invoke($module, 'access', 'view', NULL);
+        $access = NULL;
+
+        // If $access is empty, we try it another way:
+        // First we request all possible permissions, then we check the first one with the word 'access' in it with 
+        // the user_access command. If there is no permission with the word access in it, user_access('access content') 
+        // is used. This works most of the time.
+        if (is_null($access)) {
+          $perms = module_invoke($module, 'perm');
+          $pattern = "/(?m)^access.*$/";
+          preg_match($pattern, ((empty($perms)) ? '' : implode("\n", $perms)), $matches);
+          $selected_perm = (empty($matches)) ? 'access content' : $matches[0];
+          $access = user_access($selected_perm);
+        }
+      }
+    }
+
+    // If the user has no access, remove the content type from the list
+    if (!$access) {
+      unset($node_types[$key]);
+    }
+  }
+
+  return($node_types);
+}
+
+/**
+ * Return allowed node types, including a 'comments' option
+ */
+function _recent_changes_get_allowed_node_types() {
+  $allowed_node_types = variable_get('recent_changes_allowed_node_types', array());
+  $allowed_node_types = ($allowed_node_types) ? $allowed_node_types : array_keys(node_get_types('names'));
+
+  // add comments option
+  $allowed_node_types = (variable_get('recent_changes_show_comments', TRUE)) ? array_merge(array('comment'), $allowed_node_types) : $allowed_node_types;
+
+  return $allowed_node_types;
+}
+
+/**
+ * Parse (and cache) node types, and perform access check
+ */
+function _recent_changes_parse_node_types($node_types = NULL) {
+  // do some caching in case node_types is NULL
+  static $all_parsed_node_types;
+
+  $parse_all_node_types = is_null($node_types);
+
+  // return cached version if available
+  if ($parse_all_node_types && isset($all_parsed_node_types)) {
+    return $all_parsed_node_types;
+  }
+
+  // put content types in an array, and use allowed_content_types if node_types was empty
+  $node_types = _recent_changes_array_node_types($node_types);
+
+  // perform access check
+  $node_types = _recent_changes_access_check($node_types);
+
+  // cache all parsed node types if all node types were requested
+  if ($parse_all_node_types) {
+    $all_parsed_node_types = $node_types;
+  }
+
+  return($node_types);
+}
+
+/**
+ * Given an array or of node types or a single node type, this function returns the node types that are also in allowed node types
+ * If the input argument $node_types is NULL, all allowed node types are returned
+ * Note that no access checking is performed here!
+ */
+function _recent_changes_array_node_types($node_types = NULL) {
+  $allowed_node_types = _recent_changes_get_allowed_node_types();
+
+  // in case $node_types is empty ('All content types' was selected), set it to all allowed node types
+  $node_types = ($node_types) ? $node_types : $allowed_node_types;
+
+  // in case $node_types is a single node type (single selection), put it in an array
+  $node_types = (is_array($node_types)) ? $node_types : array($node_types);
+
+  // check whether the $node_types are actually in $allowed_node types, and make sure the key starts at index 0 (with array_values)
+  $node_types = array_values(array_intersect($node_types, $allowed_node_types));
+
+  return($node_types);
+}
+
+/**
+ * Returns the node type name, given the node type, and handles 'comment' as a special case because 'comment' is not an actual node type
+ */
+function _recent_changes_node_type_name($type) {
+  $node_type_name = ($type === 'comment') ? t('Comment') : node_get_types('name', $type);
+  return $node_type_name;
+}
+
+// query that returns which nodes have more than one revision
+//$revisions_result = db_query("SELECT nid, COUNT(vid) AS num FROM {node_revisions} GROUP BY nid HAVING (COUNT(nid) > 1)");
+//while ($has_revision_nid = db_fetch_object($revisions_result)) {
+//  $has_revisions[$has_revision_nid->nid] = TRUE;
+//}

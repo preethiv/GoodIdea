@@ -1,0 +1,426 @@
+<?php
+
+/**
+* Davissource.module - this module takes care of a variety of utility tasks
+* and hooks that alter minor behaviors of other modules
+**/
+
+/**
+* Implementation of hook_menu_alter().
+* As of now:
+*   - Changes the tabs for the user profile
+*/
+function davissource_menu_alter(&$items) {
+
+  // change the title of 'view' to 'profile
+  $items['user/%user/view']['title'] = 'View Profile';
+  $items['user/%user/view']['weight'] = -50;
+
+  // change the path of the settings page from 'edit' to 'settings', and change the title
+  $items['user/%user_category/settings'] = $items['user/%user_category/edit'];
+  $items['user/%user_category/settings']['title'] = t('Settings');
+  $items['user/%user_category/settings']['weight'] = -30;
+
+  unset($items['user/%user_category/edit']);
+
+  // change the path of the profile edit page from 'profile' to 'edit', and change title
+  $items['user/%user_category/edit'] = $items['user/%user_category/edit/profile'];
+  $items['user/%user_category/edit']['title'] = t('Edit Profile');
+  $items['user/%user_category/edit']['weight'] = -40;
+  $items['user/%user_category/edit']['title arguments'][0] = 'Edit Profile';
+
+  // make it a primary (first-level) tab
+  unset($items['user/%user_category/edit']['tab_parent']);
+
+  // get rid of the secondary tabs we just replaced
+  unset($items['user/%user_category/edit/account']);
+  unset($items['user/%user_category/edit/profile']);
+
+  // hide these tabs
+  $items['user/%user/ed-classified']['type'] = MENU_CALLBACK;
+}
+
+/**
+* This function renders a node as a "Heartbeat Teaser" within heartbeat messages.
+**/
+function _davissource_heatbeat_theme($object) {
+  $output = '';
+
+  $node = node_load($object->nid);
+
+  // Put a build_mode key on the $node object
+  $node->build_mode = 'heartbeat_teaser';
+
+  // Check the teaser flag and show_links flag.
+  $teaser = ($node->build_mode != 'full') ? TRUE : FALSE;
+  $show_links = ds_show_field('nd', $node->type, $node->build_mode, 'links');
+
+  // Use node_view to render.
+  $teaser = node_view($node, $teaser, FALSE, $links);
+
+  $output .= '<div id="davissource-heartbeat-listing-teaser-wrapper" class="davissource-heartbeat-teaser-wrapper">';
+  $output .= $teaser;
+  $output .= '</div>';
+  return $output;
+}
+
+/**
+ * Implementation of hook_preprocess_page:
+ * 	- adds a template suggestion for page.tpl.php based for each content type
+ *
+ */
+function davissource_preprocess_page(&$variables) {
+  if ($variables['node']->type != "") {
+    $variables['template_files'][] = "page-node-" . $variables['node']->type;
+  }
+}
+
+/**
+* Implementation of hook_block().
+*
+* Creates some blocks, including:
+* 	- submit a business
+*   - submit a wiki page
+*   - submit an event
+*   - interested flag for events
+*   - submit a promotion
+*   - submit an ad
+*   - connect flag
+*   - our location block
+*   - homepage user block
+*/
+function davissource_block($op, $delta = '', $edit = array()) {
+  global $user;
+  switch ($op) {
+    case 'list':
+      $blocks = array();
+      $blocks['submit-business'] = array('info' => t('DavisSource: Submit a Business'), );
+      $blocks['submit-wiki-page'] = array('info' => t('DavisSource: Create a Wiki Page'), );
+      $blocks['submit-event'] = array('info' => t('DavisSource: Create an Event'), );
+      $blocks['submit-article'] = array('info' => t('DavisSource: Create an Article'), );
+      $blocks['submit-promotion'] = array('info' => t('DavisSource: Create a Promotion'), );
+      $blocks['submit-classified'] = array('info' => t('DavisSource: Create an Ad'), );
+      $blocks['interested-flag'] = array('info' => t('DavisSource: Interested Flag'), );
+      $blocks['connect-flag'] = array('info' => t('DavisSource: Connect Flag'), );
+      $blocks['our-location'] = array('info' => t('DavisSource: Our Location'), );
+      $blocks['user-homepage'] = array('info' => t('DavisSource: User Block for Homepage'), );
+
+      $blocks['yahoo-weather'] = array('info' => t('DavisSource: Yahoo Weather Block for Homepage'), );
+
+      return $blocks;
+    case 'view':
+      $block = array();
+      switch ($delta) {
+        case 'submit-business':
+          $block['subject'] = '';
+          $link = l("Submit a Business!", 'node/add/business');
+          $block['content'] = $link;
+          break;
+        case 'submit-wiki-page':
+          $block['subject'] = '';
+          $link = l("Create a TownWiki page!", 'node/add/wiki-page');
+          $block['content'] = $link;
+          break;
+        case 'submit-event':
+          $block['subject'] = '';
+          $link = l("Create an Event!", 'node/add/event');
+          $block['content'] = $link;
+          break;
+        case 'submit-article':
+          $block['subject'] = '';
+          $link = l("Submit an Article!", 'node/add/article');
+          $block['content'] = $link;
+          break;
+        case 'submit-promotion':
+          $block['subject'] = '';
+          $link = l("Submit a Promotion!", 'node/add/promotion');
+          $block['content'] = $link;
+          break;
+        case 'submit-classified':
+          $block['subject'] = '';
+          $link = l("Submit an Ad!", 'node/add/ed-classified');
+          $block['content'] = $link;
+          break;
+        case 'interested-flag':
+          $block['subject'] = 'Are you interested?';
+          if (arg(0) == 'node' && is_numeric(arg(1))) {
+            $node = node_load(array('nid' => arg(1)));
+            $flag = flag_create_link('interested', $node->nid);
+            $block['content'] = $flag;
+          }
+          break;
+        case 'connect-flag':
+          $block['subject'] = 'Want to Connect?';
+          /*if (arg(0) == 'node' && is_numeric(arg(1))) {
+            $node = node_load(array('nid' => arg(1)));
+            $flag = flag_create_link('connect', $node->nid);
+            $block['content'] = $flag;
+          }*/
+          $listing_is_in_users_connection = db_result(db_query('SELECT ctctb.nid FROM content_type_connect_to_business AS ctctb INNER JOIN node ON ctctb.nid = node.nid WHERE ctctb.field_ctl_ref_business_nid = %d AND node.uid = %d', arg(1), $user->uid));
+          if (!$listing_is_in_users_connection) {
+            $links = l('Connect Me', 'node/add/connect-to-business/' . arg(1));
+          }
+          else {
+            $links = l('Disconnect Me', 'node/' . $listing_is_in_users_connection . '/delete');
+          }
+          $block['content'] = $links;
+          break;
+        case 'our-location':
+          $block['subject'] = 'Our location';
+          $nid = 302;
+          $node = node_load($nid);
+          $node->build_mode = 'sidebar';
+          $teaser = ($node->build_mode != 'full') ? TRUE : FALSE;
+          $show_links = ds_show_field('nd', $node->type, $node->build_mode, 'links');
+          $teaser = node_view($node, $teaser, FALSE, $links);
+          $block['content'] = $teaser;
+          break;
+        case 'user-homepage':
+          $block['subject'] = 'My Account';
+          global $user;
+          //print_r($user);
+          $content = '<p>Signed in as ' . theme('username', $user) . '</p>';
+          $count = privatemsg_unread_count();
+          $text = format_plural($count, 'Messages (1 new)', 'Messages (@count new)');
+          $msg = l($text, 'messages', array('attributes' => array('id' => 'privatemsg-new-link')));
+          $content .= '<p>' . $msg . '</p>';
+          $profile_link = l('See My Profile', 'user/' . $user->uid);
+          $edit_link = l('Account Settings', 'user/' . $user->uid . '/settings');
+          $content .= '<span id="user-links"><p>' . $profile_link . $edit_link . '</p></span>';
+          $block['content'] = $content;
+          break;
+
+          case 'yahoo-weather':
+          $block['subject'] = 'Weather';
+
+          $content = '<iframe allowtransparency="true" marginwidth="0" marginheight="0" hspace="0" vspace="0" frameborder="0" scrolling="no" src="http://weather.yahoo.com/badge/?id=2459115&u=c&t=trans&l=vertical" height="255px" width="186px"></iframe><noscript><a href="http://weather.yahoo.com/united-states/new-york/new-york-2459115/">New York Weather</a> from <a href="http://weather.yahoo.com">Yahoo! Weather</a></noscript>';
+          $block['content'] = $content;
+          break;
+
+      }
+      return $block;
+  }
+} // function davissource_block
+
+
+/**
+ * Get Node Type Name
+ *
+ * Given a content type key, it returns the "Type Name". This is displayed in our theme
+ * at the top of pages with a grayscale gradient background. The "Type Name" is sometimes
+ * slightly different than the type description given in the content type configuration. That's
+ * why this function is necessary.
+ */
+function davissource_get_node_type_name($type) {
+  $types = array( "wiki_page" => "Town Wiki",
+                   "business" => "Business Listing",
+                   "event" => "Event Page",
+                   "promotion" => "Business Promotion",
+                   "ed-classified" => "Classified Ad",
+                   "article" => "Opinion Article",
+                   "business_review" => "Business Review",
+                   "profile" => "User Profile",
+                 );
+  return $types[$type];
+}
+
+
+
+/**
+ * Implementation of hook_ds_fields_alter(), from the Display Suite module
+ * Adds formatters to DS
+ */
+function davissource_ds_fields_alter(&$fields) {
+  $fields['terms_1']['properties']['formatters']['davissource_listing_category'] = 'Breadcrumb Style';
+  $fields['terms_5']['properties']['formatters']['davissource_listing_category'] = 'Breadcrumb Style';
+  $fields['body']['properties']['formatters']['davissource_body_trimmed'] = 'DVS Trimmed';
+  $fields['promo_description']['properties']['formatters']['davissource_body_trimmed'] = 'DVS Trimmed';
+  $fields['full_name']['properties']['formatters']['davissource_body_trimmed'] = 'DVS Trimmed';
+}
+
+
+
+/*
+ * Implementation of hook_field_formatter_info()
+ *
+ * This tells CCK about the new cck formatters
+ */
+function davissource_field_formatter_info() {
+    return array(
+      'h2' => array(
+        'label' => t('H2'),
+        'field types' => array('text'),
+        'multiple values' => CONTENT_HANDLE_MODULE,
+      ),
+      'dvstrim' => array(
+        'label' => t('DVS Trimmed'),
+        'field types' => array('text'),
+        'multiple values' => CONTENT_HANDLE_MODULE,
+      ),
+    );
+}
+
+/**
+ * Implementation of hook_theme().
+ * Register the theme formatters as theme functions
+ */
+function davissource_theme() {
+  return array(
+    'davissource_listing_category' => array(
+      'function' => 'davissource_listing_category',
+      'arguments' => array('node' => NULL)),
+    'davissource_body_trimmed' => array(
+      'function' => 'davissource_body_trimmed',
+      'arguments' => array('node' => NULL)),
+    'davissource_formatter_h2' => array(
+      'arguments' => array('node' => NULL)),
+    'davissource_formatter_dvstrim' => array(
+      'arguments' => array('node' => NULL)),
+  );
+}
+
+/**
+ * This function is a fix for a problem with context and block titles.
+ * See the documentation for more details.
+ *
+ * @param unknown_type $title - title of block to be overriden
+ */
+function _davissource_override_block_title($title) {
+  $titles = array( "EventHeartBeat" => "Recent Activity",
+                    "BusinessHeartBeat" => "Recent Activity",
+                    "ArticlesHeartBeat" => "Recent Activity",
+                    "WikiHeartBeat" => "Recent Activity",
+                    "PromotionHeartBeat" => "Recent Activity",
+                    "ClassifiedsHeartBeat" => "Recently Added",
+                  );
+  if ($newtitle = $titles[$title]) return $newtitle;
+  else return $title;
+}
+
+
+/**
+ * Format the given field. $field includes an 'object' index that contains the current node
+ */
+function davissource_listing_category($field) {
+  $content = '';
+
+  // Only continue if the node has taxonomy terms applied
+  if (isset($field['object']->taxonomy) && !empty($field['object']->taxonomy)) {
+    // $field['key'] will have a value like terms_1 or terms_4, so this pulls the number off the end
+    $vid = end(explode('_', $field['key']));
+
+    // Since terms are not grouped by vocabulary, we need to loop over all of them and find the one(s)
+    // for the vocab in question
+    foreach ($field['object']->taxonomy as $tid => $term) {
+      if ($term->vid == $vid) {
+        $content .= l($term->name, '#' ) . '  »  ';
+      }
+    }
+  }
+  return $content;
+}
+
+/* Simple H2 formatter */
+function theme_davissource_formatter_h2($field) {
+  return '<h2>' . $field[0]['#item']['value'] . '</h2>';
+}
+
+/* Trimmed formatter wrapper */
+function theme_davissource_formatter_dvstrim($field) {
+  return davissource_body_trimmed($field);
+}
+
+/**
+ * Another Trimmed formatter wrapper
+ */
+function davissource_body_trimmed($field) {
+  return _davissource_trim($field['object']->content['body']['#value'], 200);
+}
+
+
+
+/*
+* Trimmer formatter
+* Original PHP code by Chirp Internet: www.chirp.com.au
+* Please acknowledge use of this code by including this header.
+*/
+function _davissource_trim($string, $limit, $break=" ", $pad="...") {
+  // return with no change if string is shorter than $limit
+  if (strlen($string) <= $limit) return $string;
+  // is $break present between $limit and the end of the string?
+  if (false !== ($breakpoint = strpos($string, $break, $limit))) {
+    if ($breakpoint < strlen($string) - 1) {
+      $string = substr($string, 0, $breakpoint) . $pad;
+    }
+  }
+  return $string;
+}
+
+/**
+ *
+ * This function returns a "See All" link if a block needs one, and 0 if it doesn't
+ * This link usually appears in the top right of a block.
+ * @param unknown_type $blockid
+ */
+function davissource_block_seeall($blockid, $nid) {
+  switch ($blockid) {
+    case 'heartbeat-businessheartbeat':
+      return l('See All', 'listings/browse/all');
+    case 'views-popular_events-block_1':
+      return l('See All', 'events/browse/all');
+    case 'views-upcoming_events-block_1':
+      return l('See All', 'events/browse/all');
+    case 'heartbeat-classifiedsheartbeat':
+      return l('See All', 'classifieds/browse/all');
+    case 'heartbeat-articlesheartbeat':
+      return l('See All', 'articles/browse/all');
+    case 'heartbeat-promotionheartbeat':
+      return l('See All', 'promotions/browse/all');
+    case 'views-popular_promotions-block_1':
+      return l('See All', 'promotions/browse/all');
+    case 'views-popular_listings-block_1':
+      return l('See All', 'listings/browse/all');
+    case 'views-browse_listing_reviews-block_1':
+      // get the alias for this node
+      $path = drupal_lookup_path('alias', 'node/' . $nid);
+      return l('See All', $path . '/reviews');
+    case 'views-listings_promotions-block_1':
+      // get the alias for this node
+      $path = drupal_lookup_path('alias', 'node/' . $nid);
+      return l('See All', $path . '/promotions');
+  }
+  return 0;
+}
+
+
+/**
+* HOOK_views_pre_render()
+*
+* When rendering one of our own views, insert a count into the header. Used in Browse Pages.
+*/
+function davissource_views_pre_render(&$view) {
+$i=0;
+$name = $view->name;
+if (substr($name, 0, 6) == 'browse' || $name == 'listings_promotions') {
+    $total_rows = $view->total_rows;/*
+    $items_per_page = $view->items_per_page;
+    $page_count = ceil($total_rows/$items_per_page);
+    $page_number = $view->current_page;  // 0 based
+    $otag = "<span class='count'>";
+    $ctag = "</span>";
+    $suffix = ($total_rows == 1) ? "result" : "results";
+
+    if ($page_count == 1) { // Number of pages == 1
+      $content =  "Showing {$otag}{$total_rows}{$ctag} {$suffix}";
+    }else if ($page_count > 1) {
+      $start = $page_number * $items_per_page + 1;
+      $end = $start + $items_per_page - 1;
+      if ($end > $total_rows) $end = $total_rows;  // final page handling
+      $content =  "Showing {$otag}{$start}{$ctag}-{$otag}{$end}{$ctag} of {$otag}{$total_rows}{$ctag} {$suffix}";
+    }*/
+   $content = "<span id='view-results-number'>Showing {$total_rows} results</span>";
+    $view->attachment_before = $content;
+}
+}
+
+
