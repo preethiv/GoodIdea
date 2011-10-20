@@ -1,0 +1,4 @@
+; $Id $
+name = Uniq Title
+description = This module ensures that the title of the node is unique among that content type.
+core = 6.x

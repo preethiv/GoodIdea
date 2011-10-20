@@ -1,0 +1,38 @@
+<?php
+
+/**
+ * @file
+ * Implements hook_install().
+ */
+function nodereference_dsauto_install() {
+  drupal_load('module', 'content');
+  content_notify('install', 'nodereference_dsauto');
+}
+
+/**
+ * Implements hook_uninstall().
+ */
+function nodereference_dsauto_uninstall() {
+  drupal_load('module', 'content');
+  content_notify('uninstall', 'nodereference_dsauto');
+}
+
+/**
+ * Implements hook_enable().
+ *
+ * Notify content module when this module is enabled.
+ */
+function nodereference_dsauto_enable() {
+  drupal_load('module', 'content');
+  content_notify('enable', 'nodereference_dsauto');
+}
+
+/**
+ * Implements hook_disable().
+ *
+ * Notify content module when this module is disabled.
+ */
+function nodereference_dsauto_disable() {
+  drupal_load('module', 'content');
+  content_notify('disable', 'nodereference_dsauto');
+}
