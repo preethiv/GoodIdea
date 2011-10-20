@@ -1,0 +1,803 @@
+<?php
+  // $Id: ed_classified.module,v 1.1.4.45.2.35 2009/08/13 02:12:27 milesgillham Exp $
+
+  /**
+   * @file
+   * Simple text-based classified ads module.
+   * Michael Curry, Exodus Development, Inc.
+   * exodusdev@gmail.com
+   * for more information, please visit http://exodusdev.com/drupal/modules/classified.module
+   * Copyright (c) 2006, 2007 Exodus Development, Inc.  All Rights Reserved. 
+   * Licensed under the terms of the GNU Public License (GPL) version 2.  Please see LICENSE.txt for
+   * license terms.  Possession and use of this code signifies acceptance of license
+   * terms.
+   */
+  
+  /** 
+   * If you want to remove taxonomy links from the node, and you are using the phptemplate theme engine,
+   * Simply create a node-ed_classified.tpl.php and remove (or modify) the contents of the $terms 
+   * theme variable.  $taxonomy array is also available.
+   * See: http://drupal.org/node/46012
+   */
+
+define('EDI_CLASSIFIED_MODULE_NAME', 'ed_classified');
+
+/** 
+ * Set EDI_CLASSIFIED_PATH_NAME to override the URL path component for classified ads.
+ * For example, if you know that you won't collide with other module node types, you could use 'classified' or 'classified-ads' or whatever you want
+ * 
+ * @See: http://drupal.org/node/122260 - Drupal 5.x node.module seems to dislike underscores in node types.. sigh. Do not use underscores here or you will 
+ * see strange side effects.
+ * Also, Drupal 5 and 6 seem to require that you use a string matching the module name.  More work to be done here.  Looks like you can create a URL alias
+ * from the value of EDI_CLASSIFIED_PATH_NAME  => ed-classified (or ed_classified) and then the system will work.  So, perhaps we can auto-generate a path alias
+ * from the currrent value of EDI_CLASSIFIED_PATH_NAME -> ed-classified.
+ *
+ * Also note: you must clear the menu caches in order to see this change take effect post-install.
+ */
+define('EDI_CLASSIFIED_PATH_NAME', 'ed-classified');  
+
+
+define('EDI_CLASSIFIED_MODULE_VERSION', '$Id: ed_classified.module,v 1.1.4.45.2.35 2009/08/13 02:12:27 milesgillham Exp $');
+define('EDI_CLASSIFIED_VAR_DEF_BODYLEN_LIMIT', 500);
+define('EDI_CLASSIFIED_VAR_DEF_EXPIRATION_DAYS', 30);
+define('EDI_CLASSIFIED_VAR_DEF_PURGE_AGE', 15);               // how many days after expiration to purge ads?
+define('EDI_CLASSIFIED_VAR_DEF_AD_EXPIRATION_EMAIL_WARNING_DAYS', 7);
+define('EDI_CLASSIFIED_VAR_DEF_SHOW_CONTACT_LINK_ON_POSTS', TRUE);
+define('EDI_CLASSIFIED_VAR_DEF_SEND_EMAIL_REMINDERS', FALSE);
+define('EDI_CLASSIFIED_VAR_DEF_SHOW_BODY_IN_AD_LIST', TRUE);
+define('EDI_CLASSIFIED_VAR_DEF_ALTER_ATTACHMENT_TEXT', TRUE); // If upload_image module is present, offer enhanced functionality
+define('EDI_CLASSIFIED_VAR_DEF_ALTER_ATTACHMENT_TEXT_DESCRIPTION', 'Add any photos or other images to your ad here.  Please be sure to check the \'list\' checkbox in order to ensure that the photo is visible in your ad.  Note that changes made to the attachments are not permanent until you save this classified ad by clicking the [Submit] button.');
+define('EDI_CLASSIFIED_VAR_DEF_EMAIL_BODY', 'One or more of your classified ads on !sitename (!siteurl) are expiring soon.  Please sign in and visit !user_ads_url to check your ads.');
+define('EDI_CLASSIFIED_VAR_DEF_EMAIL_SUBJ', '!sitename reminder: classified ads expiring soon!');
+define('EDI_CLASSIFIED_VAR_DEF_EXP_EMAIL_BODY', 'A classified ad on !sitename (!siteurl) has expired.  Please sign in and visit !user_ads_url to check your ads.');
+define('EDI_CLASSIFIED_VAR_DEF_EXP_EMAIL_SUBJ', '!sitename notification: classified ad expired!');
+
+define('EDI_CLASSIFIED_BANNER_URL', 'http://exodusdev.com/sites/default/files/ed-classified-banner-small.png');
+define('EDI_CLASSIFIED_INFO_URL', 'http://exodusdev.com/drupal/modules/ed_classified.module');
+
+// since drupal_get_path() appears not to be available at module load time, we need to fake it.
+// there may be a better way to find the module path.  Investigate.
+define('EDI_CLASSIFIED_MODULE_PATH', dirname(drupal_get_filename('module', 'ed_classified')));
+
+require_once(EDI_CLASSIFIED_MODULE_PATH .'/ed_classified_themefuncs.inc');
+require_once(EDI_CLASSIFIED_MODULE_PATH .'/ed_classified_settings.inc');
+
+/*
+  xodule_load_include('inc', 'ed_classified', 'ed_classified_utils');
+  xodule_load_include('inc', 'ed_classified', 'ed_classified_themefuncs');
+  xodule_load_include('inc', 'ed_classified', 'ed_classified_views');
+
+  xodule_load_include('inc', 'ed_classified', 'ed_classified_notifications'); // only when we need to send a notification
+  xodule_load_include('inc', 'ed_classified', 'ed_classified_delete'); // only when we need to delete
+  xodule_load_include('inc', 'ed_classified', 'ed_classified_settings'); // only in admin settings.
+*/
+
+/**
+ * Implementation of hook_block().
+ * 
+ */
+function ed_classified_block($op = 'list', $delta = 0, $edit = array()) {
+  module_load_include('inc', 'ed_classified', 'ed_classified_utils');
+
+  $parms = _ed_classified_displayname_parms();
+  if ($op == 'list') {
+    $blocks[0]['info'] = t('@name - Popular (requires access log enabled)', $parms);
+    $blocks[1]['info'] = t('@name - Latest', $parms); 
+    $blocks[2]['info'] = t('@name - Stats', $parms);
+    return $blocks;
+  }
+  else if ($op == 'configure') {
+    // OPTIONAL: Enter form elements to add to block configuration screen, if required.    
+  }
+  else if ($op == 'save') {
+    // OPTIONAL: Add code to trigger when block configuration is saved, if required.
+  }
+  else if ($op == 'view') {
+    if (user_access('access content')) {
+      switch ($delta) {
+      case 0:
+        $block['subject'] = t('Popular @name', $parms);
+        $block['content'] = ed_classified_get_popular_ads_list();
+        break;
+      case 1:
+        $block['subject'] = t('Latest @name', $parms);
+        $block['content'] = ed_classified_get_latest_ads_list();
+        break; 
+
+      case 2:
+        $block['subject'] = t('@name Statistics', $parms); 
+        $block['content'] = ed_classified_get_ad_stats();
+        break;
+      }
+    }
+    // suppress empty blocks
+    if (empty($block['content'])) {
+      $block = array(); // zap empty block
+    }
+    return $block;
+  }
+}
+
+
+
+/**
+ * Implementation of hook_cron().
+ */
+function ed_classified_cron() {
+  module_load_include('inc', 'ed_classified', 'ed_classified_utils');
+  module_load_include('inc', 'ed_classified', 'ed_classified_delete'); // only when we need to delete
+  module_load_include('inc', 'ed_classified', 'ed_classified_notifications'); // only when we need to send a notification
+  $time = time();
+  /* Process reminder mails as needed */
+  if (_ed_classified_variable_get('send_email_reminders', EDI_CLASSIFIED_VAR_DEF_SEND_EMAIL_REMINDERS)) {
+    _ed_classified_process_notification_emails($time);
+  }
+  _ed_classified_expire_ads($time);
+
+  // purge old ads if possible
+  _ed_classified_purge();
+}
+
+
+/**
+ * Implementation of hook_form_alter().
+ * For image ads, we suggest using attachments and the upload_image module.  If the upload_image module is enabled,
+ * and the classified ad node type has an 'attachments' form element, this function will
+ * add explanatory text to help users understand how to add an image to their ads.
+ * Also, this will un-collapse the attachments block, so that it is visible at all times.
+ * If you don't want this feature, disable it in admin/settings
+ */
+
+function ed_classified_form_alter(&$form, $form_state, $form_id) {
+  module_load_include('inc', 'ed_classified', 'ed_classified_utils');
+
+  if ($form['type']['#value'] == EDI_CLASSIFIED_MODULE_NAME) {
+    if ($form_id == 'ed_classified_node_form' && $form['attachments'] && _ed_classified_variable_get('alter_attachment_text', EDI_CLASSIFIED_VAR_DEF_ALTER_ATTACHMENT_TEXT) ) {
+      // Don't allow the attachments block to be collapsed.
+      $form['attachments']['#collapsed']=FALSE;
+      $form['attachments']['#collapsible']=FALSE;
+      // Enhance the help for classified ads.
+      // NOTE: this is approprate for the upload_image module enhancements only!
+      $form['attachments']['#title']=t('Photo Attachments');
+      $form['attachments']['#description']= _ed_classified_variable_get('alter_attachment_text_description', t(EDI_CLASSIFIED_VAR_DEF_ALTER_ATTACHMENT_TEXT_DESCRIPTION));
+    }
+  }
+} 
+
+
+/**
+ * Implementation of hook_help().
+ */
+function ed_classified_help($path, $arg) {
+  module_load_include('inc', 'ed_classified', 'ed_classified_utils');
+
+  $parms = _ed_classified_displayname_parms();
+  switch ($path) {
+  case 'admin/help#ed_classified':
+    return t('You can manage current @name using this page.', $parms);
+  case 'admin/modules#description':
+    return t('@name module', $parms);
+  case 'node/add#ed_classified':
+    return t('Create a @name.', $parms);
+  }
+}
+
+
+/**
+ * Implementation of hook_link().
+ */
+function ed_classified_link($type, $node = NULL, $teaser = FALSE) {
+  module_load_include('inc', 'ed_classified', 'ed_classified_utils');
+
+  $links = array();
+  global $user;
+
+  if (_ed_classified_node_is_classified($node)) {  
+      if (user_access('access user profiles') && _ed_classified_variable_get('show_contact_form_link_on_posts', TRUE) && _ed_classified_module_exists('contact')) {
+      $ad_author = user_load(array('uid' => $node->uid));
+        if ($ad_author  && $user->uid != $ad_author->uid && $ad_author->uid != 0) {
+        $links['ed_classified_contact'] = 
+          array('title' => t('View the advertiser\'s (@advertiser) profile.', array('@advertiser' => $ad_author->name)),
+            'href' => 'user/'. $ad_author->uid,
+            'html' => TRUE);
+      }
+    }
+    
+    // Show contact link
+    
+    if (0 != $user->uid && module_exists('contact')) { // only if logged in and there's a sitewide contact form
+      $links['ed_classified_suggest_new_category'] = 
+        array('title' => t('Suggest a new category'),
+              'href' => 'contact', 
+              'attributes' => array('title' => t('Click here to suggest a new classified ad category')));
+    }
+  }
+  return $links;
+}
+
+/**
+ * Implementation of hook_link_alter (&$links, $node)
+ * Find and destroy old taxonomy links for the classified ads node.  This  
+ * will create links to the custom classified ads taxonomy view.
+ * This would be easier if the hook callback knew what module was calling it,
+ * and the type of links that were just added.  Since we don't we have to 
+ * do some checking to find what we are looking for.
+ */
+function ed_classified_link_alter(&$node, &$links) {
+  module_load_include('inc', 'ed_classified', 'ed_classified_utils');
+
+  // array with keys like [taxonomy_term_n] => title, href, etc.
+  if (_ed_classified_node_is_classified($node)) {
+    $tax = $node->taxonomy;
+    foreach ($tax as $t) {
+      // kill any links like taxonomy_term_n
+      // OR, replace them with links to ed_classified/tid/n?
+      $key = 'taxonomy_term_'. $t->tid;
+      if (_ed_tid_is_classified_term($t->tid) && isset($links[$key])) {
+        $links[$key]['href'] = _ed_classified_make_category_path($t->tid);
+        $links[$key]['attributes'] = array('title' => t('View other ads like this one in the \'!cat\' category.', array('!cat' => $t->name)));
+      }
+    }
+  }
+}
+
+/**
+ * Implementation of hook_boot()
+ */
+
+function ed_classified_boot() {
+ // Code that is executed on each page request, even for cached pages.
+}
+
+/**
+ * Implementation of hook_init()
+ *
+ */
+function ed_classified_init() {
+  // Code that is executed on page requests for non-cached pages only.
+  // inject our css per http://api.drupal.org/api/HEAD/function/hook_init and http://api.drupal.org/api/HEAD/function/hook_menu
+  drupal_add_css(EDI_CLASSIFIED_MODULE_PATH .'/ed_classified.css');
+}
+
+/**
+ * Implementation of hook_menu().
+ */
+function ed_classified_menu() {
+  module_load_include('inc', 'ed_classified', 'ed_classified_utils');
+
+  global $user;
+  $items = array();
+  $parms = _ed_classified_displayname_parms();
+  $name = _ed_classified_displayname();
+
+  $items[EDI_CLASSIFIED_PATH_NAME] = array(
+    'title' => $name,
+    'access arguments' => array('access content'),
+    'type' => MENU_NORMAL_ITEM, // MENU_SUGGESTED_ITEM,
+    'page callback' => 'ed_classified_page');
+
+  $items['admin/content/node/'. EDI_CLASSIFIED_PATH_NAME] = array(
+    'title' => _ed_classified_displayname(), 
+    'access arguments' => array('administer classified ads'),
+    'type'     => MENU_LOCAL_TASK,
+    'page callback' => 'ed_classified_admin_overview'
+    );
+
+  $items['admin/content/'. EDI_CLASSIFIED_PATH_NAME] = array(
+    'title' => _ed_classified_displayname(), 
+    'access arguments' => array('administer classified ads'),
+    'type'     => MENU_NORMAL_ITEM,
+    'page callback' => 'ed_classified_admin_overview',
+    'description' => 'List and manage '. $name .' nodes.'
+    );
+  $items['admin/settings/'. EDI_CLASSIFIED_PATH_NAME] = array(
+    'title' => $name,
+    'title arguments' => $parms,
+    'description' => "Configure $name settings",
+    'page callback' => 'drupal_get_form',
+    'page arguments' => array('ed_classified_admin_settings'),
+    'access arguments' => array('administer site configuration'),
+    'type' => MENU_NORMAL_ITEM, // optional
+    );
+  $items['admin/'. EDI_CLASSIFIED_PATH_NAME .'/purge'] = array(
+    'title' => 'purge',
+    'page callback' => '_ed_classified_user_purge',
+    'access arguments' => array(user_access('administer classified ads')),
+    'type' => MENU_CALLBACK
+    );
+  
+  /* per-user options - use menu loader wildcards */
+  if (
+      (user_access('create classified ads')) ||
+      (user_access('edit own classified ads')) ||
+      (user_access('reset classified ad expiration'))
+      ) {
+    $items['user/%user/'. EDI_CLASSIFIED_PATH_NAME] = array(
+      'title' => 'My @name list',
+      'title arguments' => $parms,
+      'page callback' => 'ed_classified_by_user',
+      'page arguments' => array(1),
+      'access arguments' => array('access user profiles'),
+      'type' => MENU_LOCAL_TASK,
+      );
+  }
+
+  return $items;
+}
+
+function ed_classified_admin_expired() {
+  return ed_classified_admin_overview(0, TRUE);
+}
+
+/**
+ * Get a list of classified ads for a given user
+ */
+function ed_classified_by_user($user) {
+  if (!$user) {
+    // TODO this may be a bit abrupt, should we do softer error checking?
+    drupal_not_found();
+  }
+  else {
+    return ed_classified_admin_overview($user->uid);
+  }
+}
+
+/**
+ * Present admin options.
+ */
+
+function ed_classified_admin_overview($uid=0, $expired=FALSE) {
+  module_load_include('inc', 'ed_classified', 'ed_classified_utils');
+
+  global $user;
+  $can_edit = user_access('administer classified ads') || ($uid == $user->uid && user_access('edit own classified ads'));
+  $showstats = module_exists('statistics') && variable_get('statistics_count_content_views', 0);
+  $header = array(
+                  array('data' => t('Title'),        'field' => 'title'),
+                  /*    array('data' => t('Creator'),      'field' => ' */
+                  array('data' => t('Created'),    'field' => 'created'),
+                  array('data' => t('Published?'), 'field' => 'status'),
+                  array('data' => t('Expires'),      'field' => 'expires_on'));
+  if ($showstats) {
+    $header[] = array('data' => t('Total'), 'field' => 'totalcount');
+    $header[] = array('data' => t('Recent'), 'field' => 'daycount');
+  }
+  if ($can_edit) {
+    $header[] = array('data' => t('Edit')); 
+  }
+  $user_select ='';
+  if ($uid != 0) {
+    $user_select = " AND n.uid = $uid";
+  }
+
+  
+  if ($expired) {
+    $unpublished = ' AND n.status = 0 AND ec.expires_on < '. time();
+  }
+
+  // if statistics enabled, etc.
+  if ($showstats) {
+    // outer join allows us to see nodes that have no entries in the node_counter table
+    // The select columns have been modified to work for postgres
+    $sql = "SELECT n.*, ec.expires_on, ec.expiration_notify_last_sent, nc.totalcount, nc.daycount FROM {node} n, {edi_classified_nodes} ec LEFT OUTER JOIN {node_counter} AS nc ON nc.nid = ec.nid WHERE n.vid = ec.vid $unpublished $user_select ". tablesort_sql($header);
+  }
+  else {
+    $sql = "SELECT n.*, ec.expires_on, ec.expiration_notify_last_sent FROM {node} n, {edi_classified_nodes} ec WHERE n.vid = ec.vid $unpublished $user_select ". tablesort_sql($header);
+  }
+
+  $result = pager_query($sql, 50);
+  $time = time();
+  while ($ad = db_fetch_object($result)) {
+    $expired = ed_classified_ad_expired($ad, $time);
+    $expire_interval = format_interval($ad->expires_on-$time, 2);
+    $fields = array(
+      array('data' => l($ad->title, drupal_get_path_alias("node/$ad->nid"), array('attributes' => array('title' => check_markup($ad->teaser))))), 
+      array('data' => format_date($ad->created, 'custom', 'n/j/y'), 'nowrap' => 'nowrap'),
+      array('data' => $ad->status ? t('yes') : t('no')),
+      array('data' => $expired ? t('expired') : format_date($ad->expires, 'custom', 'n/j/y', $ad->expires_on) . t(' (!expire_interval)', array('!expire_interval' => $expire_interval)),  'nowrap' => 'nowrap', 
+                          'class' => $expired ? 'classified-expired-flag' : 'classified-unexpired-flag'));
+    if ($showstats) {
+      // because some nodes may never have been counted, we put 0 by default
+      $fields[] = array('data' => ($ad->totalcount == NULL ? 0 : $ad->totalcount));
+      $fields[] = array('data' => ($ad->daycount == NULL ? 0 : $ad->daycount));
+    }
+    if ($can_edit) {
+      $fields[] = array('data' => ' ['. _ed_classified_make_edit_link($ad, 'edit', array('title' => 'Edit this ad.')) .']');
+    }
+
+    $rows[] = $fields;
+  }
+
+  // TODO: use similar approach as the /admin/node page - checkboxes, delete button, confirmation
+  if ($uid != 0 && user_access('create classified ads')) {
+    $output = '<div class="classified-profile-link-add">'.
+      l(t('Create a new ad'), drupal_get_path_alias("node/add/". EDI_CLASSIFIED_PATH_NAME), array('attributes' => array('title' => t("Click here to create a new Classified Ad.")))) ."</div>\n";
+  }
+
+  $output .=  theme('table', $header, $rows) . theme('pager', NULL, 50, 0);
+  if ($uid != 0 && user_access('administer classified ads')) {
+    $days = _ed_classified_variable_get('ad_expired_purge_age', EDI_CLASSIFIED_VAR_DEF_PURGE_AGE);
+    $output .= l(
+      t('Purge old expired ads'),
+      drupal_get_path_alias('admin/'. EDI_CLASSIFIED_PATH_NAME .'/purge'),
+      array('attributes' => array('title' => t("Delete ads that are !days days old, marked expired and unpublished.", array('!days' => $days))))
+      );
+  }
+ 
+  return $output;
+}
+
+
+/**
+ * Display a page of classified ads, as appropriate.
+ * Lifted from image_gallery module.  Shameless.
+ */
+
+function ed_classified_page($type = NULL, $tid = 0) {
+  module_load_include('inc', 'ed_classified', 'ed_classified_utils');
+
+  // get a list of categories and counts
+  $cats = taxonomy_get_tree(_ed_classified_get_vid(), $tid, -1, 1);
+  for ($i=0; $i < count($cats); $i++) {
+    $cats[$i]->count = taxonomy_term_count_nodes($cats[$i]->tid, EDI_CLASSIFIED_MODULE_NAME);
+    $tree = taxonomy_get_tree(_ed_classified_get_vid(), $cats[$i]->tid, -1);
+    $descendant_tids = array_merge(array($cats[$i]->tid), array_map('_taxonomy_get_tid_from_term', $tree));
+    $last = db_fetch_object(db_query_range(db_rewrite_sql('SELECT n.nid FROM {node} n INNER JOIN {term_node} tn ON n.nid = tn.nid WHERE tn.tid IN ('. implode(',', $descendant_tids) .') AND n.status = 1 ORDER BY n.sticky DESC, n.created DESC'), 0, 1));
+    if (isset($last->nid)) {
+      $cats[$i]->latest = node_load(array('nid' => $last->nid));
+    }
+  }
+
+  // TODO: order by created date, #views, what?
+  $ads = array();
+  if ($tid) {
+#    $result = pager_query(db_rewrite_sql("SELECT n.nid FROM {term_node} t INNER JOIN {node} n ON t.nid=n.nid WHERE n.status=1 AND n.type='ed_classified' AND t.tid=%d ORDER BY n.sticky DESC, n.created DESC"), _ed_classified_variable_get('ads_per_page', 10), 0, NULL, $tid);
+    // The following line from phdhiren works, just not sure how vid is appropriate, but it works (well, vid is overloaded as version and as vocabulary in different contexts)
+    $result = pager_query(db_rewrite_sql("SELECT n.nid FROM {term_node} t INNER JOIN {node} n ON t.vid=n.vid WHERE n.status=1 AND n.type='ed_classified' AND t.tid=%d ORDER BY n.sticky DESC, n.created DESC"), _ed_classified_variable_get('ads_per_page', 10), 0, NULL, $tid);
+    while ($node = db_fetch_object($result)) {
+      $ads[] = node_load(array('nid' => $node->nid));
+    }
+    $classified_cat = taxonomy_get_term($tid);
+    $parents = taxonomy_get_parents($tid);
+    foreach ($parents as $parent) {
+      $breadcrumb[] = l($parent->name, drupal_get_path_alias(_ed_classified_make_category_path($parent->tid)));
+    }
+    $breadcrumb[] = l(_ed_classified_displayname(), drupal_get_path_alias(EDI_CLASSIFIED_PATH_NAME));
+    $breadcrumb = array_reverse($breadcrumb);
+    drupal_set_title($classified_cat->name);
+  }
+
+  //  $breadcrumb[] = l('blah', $_GET['q']);
+  drupal_set_breadcrumb($breadcrumb); // menu_set_location($breadcrumb);
+
+  $content = theme('ed_classified_taxonomy', $cats, $ads);
+
+  return $content;
+}
+
+/**
+ * Implementation of hook_perm().
+ */
+function ed_classified_perm() {
+  return array('create classified ads', 'edit own classified ads', 'reset classified ad expiration', 'administer classified ads');
+}
+
+
+
+/**
+ * Implementation of hook_access().
+ */
+function ed_classified_access($op, $node, $account) {
+  //echo "hook_access: $op, $node->nid, $account->uid, $node->uid<br/>";
+  if ($op == 'create') {
+    return user_access('create classified ads', $account);
+  }
+
+  if ($op == 'update' || $op == 'delete') {
+    if (user_access('edit own classified ads', $account) && ($account->uid == $node->uid)) {
+      return TRUE;
+    }
+  }
+}
+
+
+
+/**
+ * Implementation of hook_delete().
+ */
+function ed_classified_delete(&$node) {
+  db_query('DELETE FROM {edi_classified_nodes} WHERE nid = %d', $node->nid);
+}
+
+
+
+/**
+ * Implementation of hook_form().
+ */
+function ed_classified_form(&$node) {
+  module_load_include('inc', 'ed_classified', 'ed_classified_utils');
+
+  $type = node_get_types('type', $node); 
+  $form['title'] = array(
+    '#type' => 'textfield',
+    '#title' => check_plain($type->title_label),
+    '#required' => TRUE,
+    '#default_value' => $node->title);
+  $max_body_length = _ed_classified_variable_get('ad_standard_body_length', EDI_CLASSIFIED_VAR_DEF_BODYLEN_LIMIT);
+  $current_body_length = strlen(trim($node->body));
+
+  $form['body_filter']['body'] = array(
+    '#type' => 'textarea',
+    '#title' => check_plain($type->body_label), 
+    '#default_value' => $node->body,
+    '#required' => TRUE,
+    '#description' => t('The main body text of your ad.  Please note that ads are limited to !limit characters or less.', array('!limit' => $max_body_length)),
+    '#rows' => 10,
+    // Add a length counter so people know they have gone over.
+    // http://lists.evolt.org/archive/Week-of-Mon-20040315/156773.html
+    // TODO: This should be a part of the jstools module... 
+    // TODO: need a function and handle onblur, focus, etc. so clipboard paste works.
+    // Use behaviors js rather than this clunky code?
+    // onkeypress doesn't detect all keys in IE.  Use onkeydown/onkeyup
+    
+    // TODO: use "className" for IE6
+    // http://www.webmasterworld.com/forum91/5280.htm
+    '#attributes' => array('onkeyup' => "document . getElementById('_edi_classified_body_length_remaining') . innerHTML=this.value.length;document.getElementById('_edi_classified_body_length_remaining') . setAttribute('class', this.value.length <= $max_body_length ? 'classified-bodylength-ok' : 'classified-bodylength-exceeded');"),
+                                       );
+  $form['body_filter']['body_length_remaining'] 
+    = array('#type' => 'markup', 
+        '#value' => t('Body characters used: <span id="_edi_classified_body_length_remaining">%initial_value</span> of %max_value', 
+          array('%initial_value' => $current_body_length, '%max_value' => $max_body_length)),
+        '#prefix' => '<span id="classified-bodylength-msg">',
+        '#suffix' => '</span>',
+      );
+  // END counter code
+  $form['body_filter']['filter'] = filter_form($node->format);
+
+  /* Set up expiration info fieldset */
+  if ($node->expires_on >0) { // if not creating ad for the first time
+    $form['expiration_fieldset'] = array('#type' => 'fieldset', '#title' => t('Ad Expiration'), '#collapsible' => TRUE, '#collapsed' => FALSE );
+    $form['expiration_fieldset']['expires_on_text'] = array('#value' => theme('ed_classified_ending_date', $node->expires_on));
+    // TODO: fix this - using hidden field to preserve value
+    $form['expiration_fieldset']['expires_on'] = array('#type' => 'hidden', '#value' => $node->expires_on); 
+    // if has proper perms, allow editing of expiration date as appropriate
+    if (user_access('reset classified ad expiration')) {
+      $form['expiration_fieldset']['reset_expiration'] = 
+        array('#type' => 'checkbox', '#default_value' => '0', 
+          '#title' => t('Reset ad expiration (extend expiration date)'), 
+          '#description' => t('If this is checked, the ad\'s expiration date will be reset upon saving changes.  Duration may depend on assigned categories.'));
+    }
+  }
+  // TODO: Enter additional form elements
+  // TODO: Expiration, contact info, category (from the classified taxonomy dedicated to classified)
+  // if user has appropriate access, display and allow change of state, expiration date.
+  if (user_access('administer classified ads')) {
+    // show state here.
+  }
+  // append our form submit handler
+  $form['#submit'][]= '_ed_classified_form_submit';
+  return $form;
+}
+
+
+/**
+ * Implementation of hook_insert().
+ */
+function ed_classified_insert($node) {
+  db_query("INSERT INTO {edi_classified_nodes} (vid, nid, expires_on) VALUES (%d, %d, %d)", $node->vid, $node->nid, $node->expires_on);
+}
+
+
+/**
+ * Implementation of hook_load().
+ */
+function ed_classified_load($node) {
+  // TODO: Obtain and return additional fields added to the node type, for example:
+  // $additions = db_fetch_object(db_query('SELECT color, quantity FROM {node_example} WHERE vid = %d', $node->vid));
+  $additions = db_fetch_object(db_query('SELECT * FROM {edi_classified_nodes} WHERE vid = %d', $node->vid));
+  return $additions;
+}
+
+
+/**
+ * Implementation of hook_node_info().
+ */
+function ed_classified_node_info() {
+  // beware: these must match nodeapi value; name must be same as $node->type for spam module to add spam reporting links
+  return array(EDI_CLASSIFIED_MODULE_NAME => 
+    array('name' => t('Classified Ad'), // cannot call node_get_types() since it ends up calling this code.
+      'module' => EDI_CLASSIFIED_MODULE_NAME,
+      'description' => t('Contains a title, a body, and an administrator-defined expiration date'),
+      'has_title' => TRUE,
+      'title_label' => t('Ad Title'),
+      'has_body' => TRUE,
+      'body_label' => t('Ad Text')));
+}
+
+
+/**
+ * Implementation of form submission handler
+ */
+function _ed_classified_form_submit($form, &$form_state) {
+  module_load_include('inc', 'ed_classified', 'ed_classified_utils');
+
+  $node = $form['#node'];
+  $terms = $form['#post']['taxonomy'];
+
+  $expiration_changed = FALSE;
+  $expiration_old = $node->expires_on;
+  $expiration =  time() +  _ed_classified_days_to_seconds(_ed_classified_get_longest_duration($terms));
+
+  $user_reset = $form_state['values']['reset_expiration'];
+
+  if ($user_reset && !user_access('reset classified ad expiration')) {
+    drupal_set_message(t('You do not have permission to reset ad expiration!'));
+    $user_reset = FALSE;
+  }
+
+  // calc expiration date as appropriate
+  // If new ad, or user wants to reset expiration, or taxonomy was changed... recalc expiration?
+  if (empty($node->expires_on) || $user_reset) {
+    // it's a new ad, or the user chose to reset the expiration
+    $form_state['values']['expires_on'] = $expiration; // _ed_classified_get_default_ad_duration_in_seconds();
+    // _edi_wd(sprintf('Ad expiration was %d (%s), now %d (%s)', $old_expires, _edi_safe_date_fmt($old_expires), $node->expires_on, _edi_safe_date_fmt($node->expires_on)));
+    // we deal with republishing further down
+    $expiration_changed = TRUE;
+  }
+  else {
+    // This is not a new ad, and the user didn't choose to (or is not allowed to) reset the ad expiration
+    // so, let's check the tentative new expiration, and if it's shorter than the current expiration - we need to use the new (shorter) one
+    // Rationale: User may have changed the taxonomy terms for this ad (would be nice to be able to detect this accurately) and
+    // we don't want someone to end up creating a long-living ad that they wouldn't be able to create by normal means
+    if ($expiration < $node->expires_on) {
+      $form_state['values']['expires_on'] = $expiration;
+      // we deal with republishing further down
+      $expiration_changed = TRUE;
+    }
+  }
+  // log and notify if needed
+  if ($expiration_changed) {
+    // Sanity check - did expiration really change?
+    if ($expiration_old != $expiration) {
+      if (0 == $form_state['values']['status']) {
+        $form_state['values']['status'] = 1;
+        $publish_status = ' (setting to published)';
+      } else {
+        $publish_status = ' (already published)';
+      }
+      $msg = t('Ad expiration extended from %expires_old to %expires_new %publish_status.', 
+               array('%nid' => $node->nid, '%expires_old' => _edi_safe_date_fmt($expiration_old),
+               '%expires_new' => _edi_safe_date_fmt($expiration),
+               '%publish_status' => $publish_status
+               )
+             );
+      _edi_wd($msg, WATCHDOG_NOTICE, l('view', drupal_get_path_alias('node/'. $node->nid)));
+      drupal_set_message($msg);
+    } else {
+      drupal_set_message(t('No change to ad expiration date.'));
+    }
+  }
+  //  print '<pre>'.print_r($form_state,1).'</pre>';
+}
+
+
+/**
+ * Implementation of hook_update().
+ */
+function ed_classified_update($node) {
+  if ($node->revision) {
+    ed_classified_insert($node);
+  }
+  else {
+    db_query("UPDATE {edi_classified_nodes} SET expires_on='%d' WHERE vid = %d", $node->expires_on, $node->vid);
+  }
+}
+
+
+/**
+ * Implementation of hook_validate().
+ */
+function ed_classified_validate(&$form, $form_state) {
+  module_load_include('inc', 'ed_classified', 'ed_classified_utils');
+
+  // TODO: Enter form validation code here
+  // - Min/max expiration dates
+  // - settings: min/max expiration dates
+  // 
+  // TODO: allow override on some ads, if paid for longer ads
+  $maxlen = _ed_classified_variable_get('ad_standard_body_length', EDI_CLASSIFIED_VAR_DEF_BODYLEN_LIMIT);
+  if (strlen(trim($form->body)) > $maxlen) {
+    form_set_error('body', t('Ad text length is limited to !length characters.  Please shorten your entry to !length characters or less.', array('!length' => $maxlen)));
+  }
+}
+
+
+/**
+ * Implementation of hook_view().
+ */
+function ed_classified_view(&$node, $teaser = FALSE, $page = FALSE) {
+  module_load_include('inc', 'ed_classified', 'ed_classified_utils');
+
+  if ($page) { 
+    // modify the breadcrumbs and navigation
+    $vid = _ed_classified_get_vid();
+    $terms = taxonomy_node_get_terms_by_vocabulary($node, $vid);
+    $term = array_pop($terms);
+    if ($term) {
+      $vocab = taxonomy_vocabulary_load(_ed_classified_get_vid());
+      // Breadcrumb navigation
+      $breadcrumb = array();
+      $breadcrumb[] = l(t('Home'), NULL);
+      $breadcrumb[] = l($vocab->name, drupal_get_path_alias(EDI_CLASSIFIED_PATH_NAME));
+      if ($parents = taxonomy_get_parents_all($term->tid)) {
+        $parents = array_reverse($parents);
+        foreach ($parents as $p) {
+          $breadcrumb[] = l($p->name, drupal_get_path_alias(_ed_classified_make_category_path($p->tid)));
+        }
+      }
+      // TODO: do we want to include this item in the breadcrumb?
+      // $breadcrumb[] = l($node->title, $node->nid); // array('path' => 'node/'. $node->nid);
+      drupal_set_breadcrumb($breadcrumb);
+    }
+  }
+
+  $node = node_prepare($node, $teaser);
+  if ($page) {
+    $node->content['body']['#value'] = theme('ed_classified_body', $node);
+  }
+  else if ($teaser) {
+    $node->content['body']['#value'] = theme('ed_classified_teaser', $node);
+  }
+  return $node;
+}
+
+/**
+ * Implementation of hook_node_type()
+ */
+
+function ed_classified_node_type($op, $info) {
+
+  if (!empty($info->old_type) && $info->old_type != $info->type) {
+    $update_count = node_type_update_nodes($info->old_type, $info->type);
+    if ($update_count) {
+      $substr_pre = 'Changed the content type of ';
+      $substr_post = strtr(' from %old-type to %type.', array(
+        '%old-type' => theme('placeholder', $info->old_type),
+        '%type' => theme('placeholder', $info->type)));
+      drupal_set_message(format_plural($update_count, $substr_pre
+        .'@count post'. $substr_post, $substr_pre .'@count posts'.
+        $substr_post));
+    }
+  }
+}
+
+/**
+ * Implementation of hook_mail()
+ */
+
+function ed_classified_mail($key, &$message, $params) {
+  $language = $message['language'];
+  $variables = array_merge(user_mail_tokens($params['account'], $language), $params['context']);
+  switch ($key) {
+    case 'expired':
+      $message['subject'] = t(EDI_CLASSIFIED_VAR_DEF_EXP_EMAIL_SUBJ, $variables, $language->language);
+      $message['body'][] = t(EDI_CLASSIFIED_VAR_DEF_EXP_EMAIL_BODY, $variables, $language->language);
+      break;
+    case 'expiring':
+      $message['subject'] = t(EDI_CLASSIFIED_VAR_DEF_EMAIL_SUBJ, $variables, $language->language);
+      $message['body'][] = t(EDI_CLASSIFIED_VAR_DEF_EMAIL_BODY, $variables, $language->language);
+      break;
+    default:
+      $message['subject'] = t('Classified Ad notification from !site', $variables, $language->language);
+      break;
+  }
+}
+
+/*
+ * Implements hook_views_api()
+ */
+
+function ed_classified_views_api() {
+  module_load_include('inc', 'ed_classified', 'ed_classified_views');
+  return array('api' => 2);
+}

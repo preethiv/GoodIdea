@@ -1,0 +1,6 @@
+name = Node Reference Display Suite Autocomplete Widget
+description = Adds an additional widget to the CCK Node Reference field. When the user selects a node using autocomplete, the node is shown using a per-instance Display Suite build mode.
+dependencies[] = nodereference
+package = CCK
+core = 6.x
+

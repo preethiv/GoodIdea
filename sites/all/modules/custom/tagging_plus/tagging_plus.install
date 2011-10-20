@@ -1,0 +1,21 @@
+<?php
+// $Id $
+
+/**
+ * @file
+ * Installation/updates for tagging_plus
+ */
+
+ /**
+ * Implementation of hook_install().
+ */
+function tagging_plus_install() {
+  db_query("UPDATE {system} SET weight = 40 WHERE name = 'tagging_plus'");
+}
+
+/**
+ * Implementation of hook_uninstall().
+ */
+function tagging_plus_uninstall(){
+  db_query("DELETE from {variable} WHERE name LIKE 'tagging_plus_inject_%'");
+}

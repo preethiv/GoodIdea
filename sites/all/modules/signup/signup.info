@@ -1,0 +1,13 @@
+name = Signup
+description = "Allow users to sign up for content (especially events)."
+package = Signup
+dependencies[] = views
+core = 6.x
+
+
+; Information added by drupal.org packaging script on 2011-05-08
+version = "6.x-1.x-dev"
+core = "6.x"
+project = "signup"
+datestamp = "1304815025"
+

@@ -1,0 +1,61 @@
+<?php
+// $Id$ flag_fields.module v1.0 Yogesh S. Chaugule 11 Oct, 2011
+
+/**
+ * @filesource
+ *   Define Database schema for flag_field module
+ */
+
+/**
+ * Implementation of hook_install
+ */
+function flag_fields_install() {
+  drupal_install_schema('flag_fields');
+}
+
+/**
+ * Implementation of hook_schema
+ */
+function flag_fields_schema() {
+  $schema = array();
+  $schema['flag_fields'] = array(
+    'fields' => array(
+      'ffid' => array(
+        'type' => 'serial',
+        'size' => 'small',
+        'unsigned' => TRUE,
+        'not null' => TRUE,
+      ),
+      'flag_name' => array(
+        'type' => 'varchar',
+        'length' => '32',
+        'not null' => TRUE,
+        'default' => '',
+      ),
+      'flag_unflag' => array(
+        'type' => 'varchar',
+        'length' => '32',
+        'not null' => FALSE,
+        'default' => '',
+      ),
+      'webform_nid' => array(
+        'type' => 'int',
+        'unsigned' => TRUE,
+        'not null' => TRUE,
+        'default' => 0
+      ),
+    ),
+    'primary key' => array('flag_name', 'flag_unflag'),
+    'indexes' => array(
+      'ffid' => array('ffid'),
+    ),
+  );
+  return $schema;
+}
+
+/**
+ * Implementation of hook_uninstall
+ */
+function flag_fields_uninstall() {
+  drupal_uninstall_schema('flag_fields');
+}

@@ -1,0 +1,47 @@
+$Id: INSTALL.txt,v 1.1.2.1 2009/06/26 12:07:37 milesgillham Exp $
+
+Classified Ads module installation instructions
+
+=== Installation ===
+
+1) Copy this directory to a suitable modules directory, such as 
+   sites/all/modules
+
+2) Enable the module at: Administer > Site building > Modules. This will
+   create the necessary tables and taxonomy
+
+3) Configure the module settings at: Administer > Site configuration >
+   Classified Ads.  You should decide on an expiration and purge policy,
+   as well as a max body length (in characters).
+
+4) IMPORTANT: Add terms to the taxonomy that has been created during the
+   installation.  The taxonomy name is called 'Classified Ads' by default,
+   and you should add some terms before you allow any classified ads to
+   be created.
+
+   For example, you might want to create a simple taxonomy structure like:
+
+    - Buy
+    - Sell
+    - Trade
+
+   etc.  Be sure to set desired options for the taxonomy - like
+   single/multiple select, hierarchy options, etc.  The taxonomy should
+   have been configured to work with the ed_classified content type.
+   I've used various taxonomy schemes, and I will be providing handbook
+   entries that describe how to use taxonomies to manage classified ads.
+
+   Note: do not delete this taxonomy vocabulary - it's 'owned' by the
+   ed_classified module, and is required for proper functioning.
+
+5) Now, visit admin/user/access and set the desired access permissions.
+   For example, allow authenticated users access to 'create classified
+   ads' and 'edit own classified ads', etc.
+
+6) Visit admin/build/block and enable the classified ads blocks you
+   want to display.  Please note that the popular ads block requires
+   access log features enabled (if you haven't enabled access logging in
+   admin/logs/settings (enable 'Count content views' and 'Enable access
+   log' settings.)
+
+   Authorized users may now add classified ads.
