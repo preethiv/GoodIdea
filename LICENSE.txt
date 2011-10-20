@@ -1,4 +1,6 @@
 <<<<<<< HEAD
+=======
+<<<<<<< HEAD
                     GNU GENERAL PUBLIC LICENSE
                        Version 2, June 1991
 
@@ -339,6 +341,7 @@ consider it more useful to permit linking proprietary applications with the
 library.  If this is what you want to do, use the GNU Lesser General
 Public License instead of this License.
 =======
+>>>>>>> preethiv/master
 GNU GENERAL PUBLIC LICENSE
 
               Version 2, June 1991
@@ -613,4 +616,7 @@ IF SUCH HOLDER OR OTHER PARTY HAS BEEN ADVISED OF
 THE POSSIBILITY OF SUCH DAMAGES.
 
           END OF TERMS AND CONDITIONS
+<<<<<<< HEAD
+=======
+>>>>>>> preethiv/master
 >>>>>>> preethiv/master

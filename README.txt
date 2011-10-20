@@ -1,5 +1,7 @@
 
 <<<<<<< HEAD
+=======
+<<<<<<< HEAD
 DESCRIPTION
 --------------------------
 Enable users to create and manage their own 'groups'. Each group can have members, and maintains a group home page where members can post into. Posts may be placed into multiple groups (i.e. cross-posting) and individual posts may be shared with non-members or not. Membership to groups may be open, closed, moderated, or invitation only. Add-on modules are available for group image galleries, group calendars, group vocabulary, group stores, and so on.
@@ -71,6 +73,7 @@ Sponsored by Broadband Mechanics - http://www.broadbandmechanics.com/
 Sponsored by Finnish Broadcasting Company - http://www.yle.fi/fbc/
 Sponsored by Post Carbon Institute - http://www.postcarbon.org/
 =======
+>>>>>>> nantha/master
 Apache Solr Autocomplete module for Drupal.
 
 -- SUMMARY --
@@ -119,5 +122,9 @@ try changing the configuration to use the core Drupal autocomplete widget.
 If you encounter other problems, please post to the project issue queue:
   http://drupal.org/project/issues/apachesolr_autocomplete
 
+<<<<<<< HEAD
+--
+=======
 --
 >>>>>>> preethiv/master
+>>>>>>> nantha/master
