@@ -1,0 +1,4 @@
+name = Custom Forms
+description = "Alter already exists forms"
+core = 6.x
+project = "custom_forms"

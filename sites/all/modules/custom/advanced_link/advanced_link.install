@@ -1,0 +1,9 @@
+<?php
+// $Id $
+
+/**
+ * Implementation of hook_install().
+ */
+function advanced_link_install() {
+  db_query("UPDATE {system} SET weight = %d WHERE name = '%s'", 1, 'advanced_link');
+}

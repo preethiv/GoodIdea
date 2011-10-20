@@ -1,0 +1,77 @@
+<?php
+// $Id: nodeownership.install,v 1.1 2011/02/08 05:17:12 blisstering Exp $
+
+/**
+ * @file
+ * Module install functions for the Nodeownership module.
+ */
+
+/**
+ * Implementation of hook_install().
+ */
+function nodeownership_install() {
+  drupal_install_schema('nodeownership');
+}
+
+/**
+ * Implementation of hook_uninstall().
+ */
+function nodeownership_uninstall() {
+  drupal_uninstall_schema('nodeownership');
+  variable_del('node_types');
+  variable_del('user_claim_subject');
+  variable_del('user_claim_body');
+  variable_del('admin_approve_accept_subject');
+  variable_del('admin_approve_accept_body');
+  variable_del('admin_approve_decline_subject');
+  variable_del('admin_approve_decline_body');
+}
+
+/**
+ * Implementation of hook_schema().
+ */
+function nodeownership_schema() {
+  $schema['nodeownership'] = array(
+    'description' => t('A table containing information of nodeownership details.'),
+    'fields' => array(
+      'uid' => array(
+        'type' => 'int',
+        'unsigned' => TRUE,
+        'not null' => TRUE,
+        'default' => 0,
+        'description' => t('The primary identifier for a user.')
+      ),
+      'nid' => array(
+        'type' => 'int',
+        'unsigned' => TRUE,
+        'not null' => TRUE,
+        'default' => 0,
+        'description' => t('The identifier for a node.')
+      ),
+      'contact' => array(
+        'type' => 'varchar',
+        'length' => 255,
+        'not null' => TRUE,
+        'default' => ''
+      ), 
+      'notes' => array(
+        'type' => 'varchar',
+        'length' => 255,
+        'not null' => TRUE,
+        'default' => ''
+      ),
+      'status' => array(
+        'type' => 'int',
+        'unsigned' => TRUE,
+        'not null' => TRUE,
+        'default' => 0,
+        'description' => t('The status of nodeownership.')
+      ),
+      'timestamp' => array('type' => 'int', 'unsigned' => TRUE, 'not null' => TRUE, 'default' => 0, 'description' => t('The timestamp of claiming time.')),
+    ),
+    'primary key' => array('uid', 'nid'),
+  );
+  return $schema;
+}
+
+
