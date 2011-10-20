@@ -1,6 +1,6 @@
 // $Id: README.txt,v 1.12.2.4 2008/10/28 01:42:48 yched Exp $
 
-Content Construction Kit
+Content Construction Kit  Nantha changes
 ------------------------
 
 NOTE: Install the advanced_help module (http://drupal.org/project/advanced_help)
