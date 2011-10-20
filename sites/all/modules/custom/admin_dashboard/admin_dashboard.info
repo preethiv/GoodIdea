@@ -1,0 +1,4 @@
+; $Id: channel_schedule.info,v 1.0 2011/09/06 15:45:00 gauravkumar87 Exp $
+name = TownSource Admin Dashboard
+description = Provides an admin dashboard for Townsource
+core = 6.x

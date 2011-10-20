@@ -1,0 +1,798 @@
+<?php
+// $Id$ custom_forms.module v1.0 Yogesh S. Chaugule 07 Sep, 2011
+
+/**
+ * @file
+ * Used to alter existing forms and functionality.
+ */
+
+function custom_forms_menu() {
+  $items['page-not-found'] = array(
+    'page callback' => 'request_page_to_create',
+    'access callback' => TRUE,
+    'type' => MENU_CALLBACK,
+  );
+  $items['admin/build/dashboard/requested-wiki-pages'] = array(
+    'title' => 'Requested wiki pages',
+    'page callback' => 'custom_forms_wiki_request_page_listing',
+    'access callback' => 'user_access',
+    'access arguments' => array('administer dashboard'),
+    'type' => MENU_NORMAL_ITEM,
+  );
+  $items['admin/build/dashboard/uncategorized-pages-listing'] = array(
+    'title' => t('Uncategorized Content List'),
+    'page callback' => 'uncategorized_pages_form',
+    'access callback' => 'user_access',
+    'access arguments' => array('administer dashboard'),
+    'type' => MENU_NORMAL_ITEM,
+  );
+  $items['admin/build/dashboard/high-activity-areas'] = array(
+    'title' => t('High Activity Areas'),
+    'page callback' => 'high_activity_areas_form',
+    'access callback' => 'user_access',
+    'access arguments' => array('administer dashboard'),
+    'type' => MENU_NORMAL_ITEM,
+  );
+  $items['message-all-subscribers/%'] = array(
+    'title' => 'Message All Subscribers',
+    'page callback' => 'drupal_get_form',
+    'page arguments' => array('custom_forms_message_all_subscribers_form'),
+    'access callback' => 'user_access',
+    'access arguments' => array('send message to all subscribers'),
+    'type' => MENU_NORMAL_ITEM,
+  );
+  return $items;
+}
+
+/**
+ * Implementation of hook_perm().
+ */
+function custom_forms_perm() {
+  return array('send message to all subscribers');
+}
+
+/**
+ * Implementation of hook_form_alter
+ * @param Array $form
+ * @param Array $form_state
+ * @param String $form_id
+ */
+function custom_forms_form_alter(&$form, &$form_state, $form_id) {
+  // print '<br><pre>'; print_r($form_id); print '</pre>';
+  global $user;
+  switch ($form_id) {
+    case 'wiki_page_node_form':
+      $form['buttons']['submit']['#attributes'] = array('onclick' => 'return onClickValidate();');
+      drupal_add_js('
+        $(document).ready(function() {
+          // on page load make description field as display:none
+          $("#edit-field-listing-reference-ext-desc-0-value-wrapper").attr("style", "display:none;");
+          $("#edit-field-listing-reference-external-0-value").click(function() {
+            $("#edit-field-listing-reference-ext-desc-0-value-wrapper").attr("style", "display:block;");
+          });
+          $("input#edit-submit").click(function() {
+            $("input").removeAttr("disabled");
+          });
+        });
+        // helper function for validating url
+        function onClickValidate() {
+          var internalLink = document.getElementById("edit-field-listing-reference-nid-nid").value;
+          var externalLink = document.getElementById("edit-field-listing-reference-external-0-value").value;
+          var externalLinkDescription = document.getElementById("edit-field-listing-reference-ext-desc-0-value").value;
+          if (externalLink != "") {
+            // validate url user has entered in external link listing field.
+            var urlregex = new RegExp("^(http|https|ftp)\://([a-zA-Z0-9\.\-]+(\:[a-zA-Z0-9\.&amp;%\$\-]+)*@)*((25[0-5]|2[0-4][0-9]|[0-1]{1}[0-9]{2}|[1-9]{1}[0-9]{1}|[1-9])\.(25[0-5]|2[0-4][0-9]|[0-1]{1}[0-9]{2}|[1-9]{1}[0-9]{1}|[1-9]|0)\.(25[0-5]|2[0-4][0-9]|[0-1]{1}[0-9]{2}|[1-9]{1}[0-9]{1}|[1-9]|0)\.(25[0-5]|2[0-4][0-9]|[0-1]{1}[0-9]{2}|[1-9]{1}[0-9]{1}|[0-9])|([a-zA-Z0-9\-]+\.)*[a-zA-Z0-9\-]+\.(com|edu|gov|int|mil|net|org|biz|arpa|info|name|pro|aero|coop|museum|[a-zA-Z]{2}))(\:[0-9]+)*(/($|[a-zA-Z0-9\.\,\?\'\\\+&amp;%\$#\=~_\-]+))*$");
+            if (urlregex.test(externalLink)){
+              if (externalLink != "" && externalLinkDescription == "") {
+                alert("Please add Description for External link");
+                $("#edit-field-listing-reference-ext-desc-0-value").focus();
+                return false;
+              } else {}
+            } else {
+              alert("Invalid URL");
+              $("#edit-field-listing-reference-external-0-value").focus();
+              return false;
+            }
+          } else {}
+          $("input").removeAttr("disabled");
+        }
+      ', 'inline');
+      if (arg(2) == 'edit' && !(isset($user->role[8]) || isset($user->role[5]) || $user->uid == 1)) {
+        $form[title]['#disabled'] = TRUE;
+        $form[taxonomy][6]['#disabled'] = TRUE;
+      }
+      if (arg(1) == 'add' && arg(2) == 'wiki-page' && isset($_GET['title'])) {
+        $form[title]['#default_value'] = $_GET['title'];
+      }
+      break;
+    case 'business_node_form':
+      if (arg(2) == 'edit' && !(isset($user->role[8]) || isset($user->role[5]) || $user->uid == 1)) {
+        $node_owner = db_result(db_query('SELECT uid FROM {nodeownership} WHERE nid = %d AND status = 1', arg(1)));
+        if (($node_owner && $node_owner != $user->uid) && !(isset($user->role[8]) || isset($user->role[5]) || $user->uid == 1)) {
+          drupal_goto('node/' . arg(1));
+        }
+        $form[title]['#disabled'] = TRUE;
+        $form[title]['#value'] = $form[title]['#default_value'];
+      }
+      break;
+    case 'connect_to_business_node_form':
+      if (is_numeric(arg(3))) {
+        $business_node_title = db_result(db_query('SELECT title FROM {node} WHERE nid = %d', arg(3)));
+      }
+      else {
+        $business_node_title = db_result(db_query('SELECT title FROM {node} WHERE nid = %d', arg(1)));
+      }
+      $form['title']['#value'] = $business_node_title;
+      $form['title']['#disabled'] = TRUE;
+      break;
+    case 'business_gallery_node_form':
+      if (is_numeric(arg(3))) {
+        $business_node_title = db_result(db_query('SELECT title FROM {node} WHERE nid = %d', arg(3)));
+      }
+      else {
+        $business_node_title = db_result(db_query('SELECT title FROM {node} WHERE nid = %d', arg(1)));
+      }
+      $form['title']['#value'] = $business_node_title;
+      $form['title']['#disabled'] = TRUE;
+      // If listing is claimed and approved, then do not allow anyother user to add/edit photo to this listing.
+      $listing_id = db_result(db_query('SELECT field_ref_business_nid FROM {content_type_business_gallery} WHERE nid = %d', arg(1)));
+      $listing_author = db_result(db_query('SELECT uid FROM {node} WHERE nid = %d', $listing_id));
+      $node_is_claimed_by_user = db_result(db_query('SELECT count(*) FROM {nodeownership} WHERE nid = %d AND status = 1', $listing_id));
+      if (($node_is_claimed_by_user && $listing_author != $user->uid)) {
+        drupal_goto('node/' . $listing_id);
+      }
+      break;
+    case 'flag_confirm':
+      if ($form['action']['#value'] == 'flag' && $form['flag_name']['#value'] == 'delete_business_node') {
+        $listing_title = db_result(db_query('SELECT title FROM {node} WHERE nid = %d', $form['content_id']['#value']));
+        $form['flag_title_value'] = array(
+          '#type' => 'item',
+          '#value' => '<h2>Are you sure you want to request deletion for this content : ' . $listing_title . '?</h2>',
+          '#weight' => -3,
+        );
+        $form['flag_reason_for_deletion'] = array(
+          '#type' => 'radios',
+          '#title' => t('Reason for Deleting'),
+          '#options' => array(
+            'listing_doesnt_exist' => t('Listing doesn\'t exist'),
+            'i_dont_want_my_business_listed' => t('I don\'t want my business listed'),
+            'offensive' => t('Offensive'),
+          ),
+          '#weight' => -2,
+        );
+        $form['flag_comments'] = array(
+          '#type' => 'textarea',
+          '#title' => t('Comments'),
+          '#weight' => -1,
+        );
+        $form['#submit'][] = 'flag_delete_business_node_custom_submit';
+      }
+      break;
+  }
+}
+
+/**
+ * Implementation of hook_nodeapi
+ * @param stdClass Object $node
+ * @param String $op
+ * @param String $a3
+ * @param String $a4
+ */
+function custom_forms_nodeapi(&$node, $op, $a3 = NULL, $a4 = NULL) {
+  // print '<br><pre>'; print_r($op); print '</pre>';
+  global $user, $base_url;
+  switch ($op) {
+    case 'load':
+      if ($node->type == 'connect_to_business' && arg(2) == NULL) {
+        drupal_goto('node/' . $node->field_ctl_ref_business[0][nid]);
+      }
+      break;
+    case 'insert':
+      if ($node->type == 'promotion') {
+        $listing_alias = db_result(db_query('SELECT dst FROM {url_alias} WHERE src = "node/%d"', $node->field_listing_reference[0]['nid']));
+        $sql = 'SELECT DISTINCT(node.uid) AS node_author, ctctb.nid, node.type FROM {node}
+          INNER JOIN {content_type_connect_to_business} AS ctctb ON node.nid = ctctb.nid
+          WHERE ctctb.field_ctl_notify_on_new_promotio_value = "yes" AND ctctb.field_ctl_ref_business_nid = ' . $node->field_listing_reference[0]['nid'];
+        $query = db_query($sql);
+        while ($result = db_fetch_object($query)) {
+          $tokens = array(
+            '!username' => db_result(db_query('SELECT name FROM {users} WHERE uid = %d', $result->node_author)),
+            '!site' => variable_get('site_name', ''),
+            '!uri' => $base_url,
+            '!login_url' => $base_url . '/user/login',
+            '!date' => format_date(time(), 'medium', '', NULL, $language->language),
+            '!listingtitle' => db_result(db_query('SELECT title FROM {node} WHERE nid = %d', $node->field_listing_reference[0]['nid'])),
+            '!listing_url' => $base_url . '/' . $listing_alias,
+          );
+          // create a $message array to send mail to user.
+          $message = array(
+            'to' => db_result(db_query('SELECT mail FROM {users} WHERE uid = %d', $result->node_author)),
+            'subject' => strtr("[!site] - New Promotion for !listingtitle", $tokens),
+            'body' => strtr("Hi !username,\n\nThere is a new promotion added for !listingtitle on !site.\n\nPlease visit below url for more details:\n!listing_url\n\n\nThank you,\n!site Team", $tokens),
+            'headers' => array('From' => variable_get('site_mail', '')),
+          );
+          // Send mail to user
+          $mail_response = drupal_mail_send($message);
+          if (!$mail_response) {
+            watchdog('custom_forms', "Unable to send notification mail for new promotion to user !username.", $tokens);
+          }
+        }
+      }
+      break;
+    case 'delete':
+      if ($node->type == 'wiki_page') {
+        $node_is_flagged = db_result(db_query('SELECT count(*) FROM {flag_content} WHERE content_id = %d', $node->nid));
+        if ($node_is_flagged > 0) {
+          $query = db_query('SELECT name, mail FROM {users} WHERE uid IN (SELECT uid FROM {flag_content} WHERE content_id = %d AND mail <> "")', $node->nid);
+          while ($result = db_fetch_array($query)) {
+            $message = array(
+              'to' => $result['mail'],
+              'subject' => t('[' . variable_get('site_name', 'TownSource') . '] - The content you marked for deletion has been deleted'),
+              'body' => "Hello " . $result['name'] . ",\n\nYou have submited a request for <b>" . $node->title . "</b> to delete from the website. We have completely remove the content for the website. \n\nThanks\n" . variable_get('site_name', 'TownSource') . " Team!",
+              'headers' => array('From' => variable_get('site_mail', '')),
+            );
+            if (!drupal_mail_send($message)) {
+              watchdog('custom_forms', 'Unable to send mail to @username in regards to flagging @nodetitle for deletion.', array('@username' => $result['mail'], '@nodetitle' => $node->title));
+            }
+          }
+        }
+      }
+      break;
+  }
+}
+
+/**
+* Implementation of hook_block().
+*
+* Creates some blocks, including:
+* 	- contact-listing
+*   - listing-photo-gallery
+*   - my_account_block
+*   - listings-connection-details
+*/
+function custom_forms_block($op, $delta = '', $edit = array()) {
+  global $user;
+  switch ($op) {
+    case 'list':
+      $blocks = array();
+      $blocks['contact-listing'] = array('info' => t('Custom Forms: Contact Listing'));
+      $blocks['listing-photo-gallery'] = array('info' => t('Custom Forms: Listing Photo Gallery'));
+      $blocks['my_account_block'] = array('info' => t('Custom Forms: My Account Block'));
+      $blocks['listings-connection-details'] = array('info' => t('Custom Forms: Listing Connections Block'));
+      return $blocks;
+    case 'view':
+      $block = array();
+      switch ($delta) {
+        case 'contact-listing':
+          $block['subject'] = 'Contact Me';
+          $user_id = db_result(db_query('SELECT uid FROM {node} WHERE nid = %d', arg(1)));
+          if ($user_id != $user->uid && $user_id != 0 && $user->uid != 0) {
+            $link = l("Contact Me", 'user/' . $user_id . '/contact');
+            $block['content'] = $link;
+          }
+          break;
+        case 'listing-photo-gallery':
+          $block['subject'] = 'Photo Gallery';
+          $header = array();
+          $rows = array();
+          $listing_photo_gallery_ref = db_result(db_query('SELECT nid FROM {content_type_business_gallery} WHERE field_ref_business_nid = %d', arg(1)));
+          $node_is_claimed_by_user = db_result(db_query('SELECT count(*) FROM {nodeownership} WHERE nid = %d AND status = 1', arg(1)));
+          $node_author = db_result(db_query('SELECT uid FROM {node} WHERE nid = %d', arg(1)));
+          if ($listing_photo_gallery_ref) {
+            $query = db_query('SELECT files.filename, files.filepath FROM {files} AS files
+              INNER JOIN {content_field_photo_gallery} AS cfpg ON files.fid = cfpg.field_photo_gallery_fid
+              WHERE nid = %d', $listing_photo_gallery_ref);
+            while ($result = db_fetch_object($query)) {
+              $result_arr[] = array(
+                'name' => $result->filename,
+                'path' => $result->filepath,
+              );
+            }
+            $result_count = count($result_arr);
+            for ($i = 0; $i < $result_count; $i = $i + 2) {
+              $listing_photo = theme('imagecache', 'size_medium_small', $result_arr[$i]['path'], $result_arr[$i]['filename'], $result_arr[$i]['filename']);
+              $photo_link = l($listing_photo, $result_arr[$i]['path'], array('html' => TRUE, 'attributes' => array('rel' => 'lightbox')));
+              if ($result_arr[$i+1]['path']) {
+                $listing_photo_next = theme('imagecache', 'size_medium_small', $result_arr[$i+1]['path'], $result_arr[$i+1]['filename'], $result_arr[$i+1]['filename']);
+                $photo_link_next = l($listing_photo_next, $result_arr[$i+1]['path'], array('html' => TRUE, 'attributes' => array('rel' => 'lightbox')));
+              }
+              else {
+                $photo_link_next = '';
+              }
+              $rows[] = array($photo_link, $photo_link_next);
+            }
+            $output = theme('table', $header, $rows);
+            // for showing Add photo link at footer
+            $show_add_photo_link = db_result(db_query('SELECT nid FROM {content_type_business_gallery} WHERE field_ref_business_nid = %d', arg(1)));
+            if (($node_is_claimed_by_user && $node_author == $user->uid) || (!$node_is_claimed_by_user)) {
+              if ($show_add_photo_link) {
+                $output .= '<div class="blocks-add-more">' . l('Add Photo', 'node/' . $show_add_photo_link . '/edit', array('query' => 'destination=node/' . arg(1))) . '</div>';
+              }
+              else {
+                $output .= '<div class="blocks-add-more">' . l('Add Photo', 'node/add/business-gallery/' . arg(1), array('query' => 'destination=node/' . arg(1))) . '</div>';
+              }
+            }
+          }
+          else {
+            $output = 'No Photos have been uploaded for this listing.';
+            if ((($node_is_claimed_by_user && $node_author == $user->uid) || (!$node_is_claimed_by_user)) && $user->uid) {
+              $output .= ' ' . l('Add Photo', 'node/add/business-gallery/' . arg(1));
+            }
+          }
+          $block['content'] = $output;
+          break;
+        case 'my_account_block':
+          $block['subject'] = '';
+          $user_picture_details_query = db_query('SELECT files.filename, files.filepath FROM {files}
+            INNER JOIN content_field_image AS cfi ON files.fid = cfi.field_image_fid
+            INNER JOIN node ON node.nid = cfi.nid
+            WHERE node.uid = %d AND node.type = "profile"', $user->uid);
+          $user_picture_details = db_fetch_object($user_picture_details_query);
+          if ($user_picture_details->filepath) {
+            $user_picture = theme('imagecache', 'myaccount_preset', $user_picture_details->filepath, $user->name, $user->name);
+          }
+          else {
+            $user_picture = theme('imagecache', 'myaccount_preset', 'sites/default/files/imagefield_default_images/default_user.jpg', $user->name, $user->name);
+          }
+          $count = privatemsg_unread_count();
+          if ($count) {
+            $show_user_notification = '<span class="private-msg-count">' . $count . '</span>';
+          }
+          $output = '<div id="myaccountblock"><ul class="menu">
+                      <li class="leaf first dhtml-menu ">' .
+                        l($user_picture . ' ' . $user->name, 'user', array('html' => TRUE)) .
+                      '</li>
+                      <li class="leaf  dhtml-menu  active-trail">' .
+                        l('Dashboard', '') .
+                      '</li>
+                      <li class="leaf  dhtml-menu ">' .
+                        l('Inbox ' . $show_user_notification, 'messages', array('html' => TRUE)) .
+                      '</li>
+                      <li class="leaf  dhtml-menu ">' .
+                        l('Account Settings', 'user') .
+                      '</li>
+                       <li class="leaf last dhtml-menu ">' .
+                         l('Logout', 'logout') .
+                       '</li>
+                     </ul></div>';
+          $block['content'] = $output;
+          break;
+        case 'listings-connection-details':
+          $block['subject'] = 'Connected Users';
+          $i = 0;
+          $output = '';
+          $header = array();
+          $rows = array();
+          $user_who_flagged_row = array();
+          $node_author = db_result(db_query('SELECT uid FROM {node} WHERE nid = %d', arg(1)));
+          $user_who_flagged_query = db_query('SELECT users.uid, users.name AS user_name, fc.timestamp AS flag_timestamp
+            FROM users users
+            INNER JOIN flag_content fc ON users.uid = fc.uid AND fc.fid = 6
+            WHERE fc.content_id = %d
+            ORDER BY flag_timestamp DESC', arg(1));
+          while ($user_who_flagged_result = db_fetch_object($user_who_flagged_query)) {
+            $show_conn_publicly = db_result(db_query('SELECT ctctb.field_ctl_show_conn_publicly_value
+              FROM {content_type_connect_to_business} AS ctctb INNER JOIN node ON node.nid = ctctb.nid
+              WHERE ctctb.field_ctl_ref_business_nid = %d AND node.uid = %d', arg(1), $user_who_flagged_result->uid));
+            if ($show_conn_publicly == 'yes') {
+              $user_picture_details_query = db_result(db_query('SELECT files.filepath FROM {files}
+                INNER JOIN content_field_image AS cfi ON files.fid = cfi.field_image_fid
+                INNER JOIN node ON node.nid = cfi.nid
+                WHERE node.uid = %d AND node.type = "profile"', $user_who_flagged_result->uid));
+              if (!$user_picture_details_query) {
+                $user_picture_details_query = 'sites/default/files/imagefield_default_images/default_user.jpg';
+              }
+              $user_who_flagged_row[$i]['user_id'] = $user_who_flagged_result->uid;
+              $user_who_flagged_row[$i]['user_name'] = $user_who_flagged_result->user_name;
+              $user_who_flagged_row[$i]['user_picture_path'] = $user_picture_details_query;
+              $i++;
+            }
+          }
+          $result_count = count($user_who_flagged_row);
+          if ($result_count) {
+            for ($i = 0; $i < $result_count; $i = $i + 4) {
+              $user_profile_photo = theme('imagecache', 'size_ex_small', $user_who_flagged_row[$i]['user_picture_path'], $user_who_flagged_row[$i]['user_name'], $user_who_flagged_row[$i]['user_name']);
+              $user_who_flagged = l($user_profile_photo, 'user/' . $user_who_flagged_row[$i]['user_id'], array('html' => TRUE));
+              if ($user_who_flagged_row[$i+1]['user_id']) {
+                $user_profile_photo = theme('imagecache', 'size_ex_small', $user_who_flagged_row[$i+1]['user_picture_path'], $user_who_flagged_row[$i+1]['user_name'], $user_who_flagged_row[$i+1]['user_name']);
+                $user_who_flagged_second = l($user_profile_photo, 'user/' . $user_who_flagged_row[$i+1]['user_id'], array('html' => TRUE));
+              }
+              else {
+                $user_who_flagged_second = '';
+              }
+              if ($user_who_flagged_row[$i+2]['user_id']) {
+                $user_profile_photo = theme('imagecache', 'size_ex_small', $user_who_flagged_row[$i+2]['user_picture_path'], $user_who_flagged_row[$i+2]['user_name'], $user_who_flagged_row[$i+2]['user_name']);
+                $user_who_flagged_third = l($user_profile_photo, 'user/' . $user_who_flagged_row[$i+2]['user_id'], array('html' => TRUE));
+              }
+              else {
+                $user_who_flagged_third = '';
+              }
+              if ($user_who_flagged_row[$i+3]['user_id']) {
+                $user_profile_photo = theme('imagecache', 'size_ex_small', $user_who_flagged_row[$i+3]['user_picture_path'], $user_who_flagged_row[$i+3]['user_name'], $user_who_flagged_row[$i+3]['user_name']);
+                $user_who_flagged_fourth = l($user_profile_photo, 'user/' . $user_who_flagged_row[$i+3]['user_id'], array('html' => TRUE));
+              }
+              else {
+                $user_who_flagged_fourth = '';
+              }
+              $rows[] = array($user_who_flagged, $user_who_flagged_second, $user_who_flagged_third, $user_who_flagged_fourth);
+            }
+            $output = theme('table', $header, $rows);
+            // for showing Message People link below connected users
+            $node_has_people_connected = db_result(db_query('SELECT count(nid) FROM {content_type_connect_to_business} WHERE field_ctl_ref_business_nid = %d', arg(1)));
+            if ($node_has_people_connected && $node_author == $user->uid) {
+              $output .= '<div class="blocks-add-more">' . l('Message People', 'message-all-subscribers/' . arg(1), array('query' => 'destination=node/' . arg(1))) . '</div>';
+            }
+          }
+          else {
+            $output = '<div class="no-connection-found">No found for this listing.</div>';
+          }
+          $block['content'] = $output;
+          break;
+      }
+      return $block;
+  }
+}
+
+/**
+ * Implementation of hook_link().
+ */
+function custom_forms_link($type, $node = NULL, $teaser = FALSE) {
+  global $user;
+  $links = array();
+  $types_to_annotate = variable_get('node_types', array('page'));
+  if ($node->type == 'business' && $user->uid != 0) {
+    // for showing Add Photo link
+    $node_is_claimed_by_user = db_result(db_query('SELECT count(*) FROM {nodeownership} WHERE nid = %d AND status = 1', $node->nid));
+    $show_add_photo_link = db_result(db_query('SELECT nid FROM {content_type_business_gallery} WHERE field_ref_business_nid = %d', $node->nid));
+    /*if (($node_is_claimed_by_user && $node->uid == $user->uid) || (!$node_is_claimed_by_user)) {
+      if ($show_add_photo_link) {
+        $links['listing_gallery'] = array(
+          'title' => t('Add Photo'),
+          'href' => 'node/' . $show_add_photo_link . '/edit',
+          'query' => 'destination=node/' . $node->nid,
+        );
+      }
+      else {
+        $links['listing_gallery'] = array(
+          'title' => t('Add Photo'),
+          'href' => 'node/add/business-gallery/' . $node->nid,
+          'query' => 'destination=node/' . $node->nid,
+        );
+      }
+    }*/
+    // for showing Claim Listing link
+    if (!$node_is_claimed_by_user && $types_to_annotate[$node->type] && user_access('access claim page')) {
+      $links['nodeownership_link'] = array(
+        'title' => t('Claim This Listing'),
+        'href' => 'node/' . $node->nid . '/claim',
+      );
+    }
+    /*$node_has_people_connected = db_result(db_query('SELECT count(nid) FROM {content_type_connect_to_business} WHERE field_ctl_ref_business_nid = %d', $node->nid));
+    if ($node_has_people_connected && $node->uid == $user->uid) {
+      $links['message_people_in_connection'] = array(
+        'title' => t('Message People'),
+        'href' => 'message-all-subscribers/' . $node->nid,
+        'query' => 'destination=node/' . $node->nid,
+      );
+    }*/
+  }
+  return $links;
+}
+
+/**
+ * Callback function for Request wiki page.
+ */
+function request_page_to_create() {
+  global $user;
+  /**
+   * $_REQUEST['destination'] will return only node url not complete url.
+   * it will only return TownWiki/test
+   * in both the cases like 1st - http://bliss-dev.com/townsource/DavisSource/TownWiki/test
+   *   2nd - http://townsource.bliss-dev.com/TownWiki/test
+   */
+  $url = $_REQUEST['destination'];
+  $url_array = explode('/', $url);
+  $townwikilink = $url_array[0];
+  if ($user->uid && $townwikilink == 'TownWiki') {
+    $title = $url_array[1];
+    $title_exists = db_result(db_query('SELECT count(*) FROM {custom_request_page_titles} WHERE title = "%s"', $title));
+    if ($title_exists > 0) {
+      return 'The page you requested doesn\'t exists But the request for creating this page is already sent to the Site Administartor.<br><br>It will be available soon.';
+    }
+    else {
+      db_query('INSERT INTO {custom_request_page_titles} (uid, title) VALUES (%d, "%s")', $user->uid, $title);
+      return 'The page you requested doesn\'t exists.<br><br>We have added your request to the Site Administartor to crete this page.';
+    }
+  }
+  else {
+    return FALSE;
+  }
+}
+
+/**
+ * Callback function for Requested wiki pages
+ */
+function custom_forms_wiki_request_page_listing() {
+  $title_query = db_query('SELECT n.title FROM {node} AS n INNER JOIN {custom_request_page_titles} AS c ON n.title = c.title');
+  while ($result = db_fetch_array($title_query)) {
+    db_query('DELETE FROM {custom_request_page_titles} WHERE title LIKE "%s"', $result['title']);
+  }
+  $all_titles = db_query('SELECT title FROM {custom_request_page_titles}');
+  $rows = array();
+  while ($restult_titles = db_fetch_array($all_titles)) {
+    $row = array();
+    $row[] = $restult_titles['title'];
+    $row[] = l('Create this page', 'node/add/wiki-page', array('query' => array('title' => $restult_titles['title'])));
+    $rows[] = $row;
+  }
+  $output = theme('table', array('title', 'create_link'), $rows);
+  return $output;
+}
+
+/**
+ * Callback function for showing uncategorized content
+ */
+function uncategorized_pages_form() {
+  $rows = array();
+  $header = array();
+  $output = '';
+  $header = array('title' => 'Name', 'tag_count' => 'Tag Count', 'type' => 'Type');
+  $sql = db_query("SELECT DISTINCT(node.nid) AS nid_1, node.title AS node_title, node.type AS node_type, node.nid AS nid, node.uid AS node_uid,
+          node.type AS node_type, node.created AS node_created
+          FROM {node} node
+          WHERE node.type in ('wiki_page') ORDER BY node_created DESC");
+  while ($wiki_pages = db_fetch_object($sql)) {
+    $wiki_count = db_result(db_query("SELECT count(DISTINCT(tn.tid)) AS tid_count FROM {term_node} AS tn INNER JOIN {term_data} AS td ON tn.tid = td.tid WHERE td.vid = 9 AND tn.nid = %d", $wiki_pages->nid));
+    if ($wiki_count < 2) {
+      $node_title = $wiki_pages->node_title;
+      $node_type = $wiki_pages->node_type;
+      $wiki_tag_count = $wiki_count;
+      $rows[] = array($node_title, $wiki_tag_count, $node_type);
+    }
+  }
+  if (count($rows) > 0) {
+    $output = theme('table', $header, $rows);
+  }
+  else {
+    $output = 'No Content found.';
+  }
+  return $output;
+}
+
+/**
+ * Callback function for showing content with high activity
+ */
+function high_activity_areas_form() {
+  $rows = array();
+  $header = array();
+  $output = '';
+  $current_time = time();
+  // Define headers for table
+  $header = array(
+    'title' => 'Wiki Name',
+    'created' => 'Last Updated Date',
+    'commented_date' => 'Last Commented Date',
+    //'ccount' => 'Version Count',
+    //'node_comment_count' => 'Comment Count'
+  );
+  // Add first row which will show admin that this if only of this week
+  $rows[] = array(
+    array(
+      'data' => '<b>This Week</b>',
+      'colspan' => '5',
+      'class' => 'date'
+    )
+  );
+  // Query all recent updates (revision / comment) records for this week.
+  $sql = db_query('SELECT DISTINCT(node.nid), node.title AS node_title, node.changed, node.type, ncs.comment_count,
+                   count(nr.nid) AS nvcount, ncs.last_comment_timestamp,
+                   GREATEST(count(nr.nid), ncs.comment_count) AS node_node_comment_count,
+                   GREATEST(node.changed, ncs.last_comment_timestamp) AS node_node_comment_statistics_last_updated
+                   FROM {node} AS node
+                   INNER JOIN {node_revisions} AS nr ON node.nid = nr.nid
+                   INNER JOIN {node_comment_statistics} ncs ON node.nid = ncs.nid
+                   WHERE (node.status = 1)
+                   AND (node.type in ("wiki_page"))
+                   AND ((node.changed > (' . $current_time . ' - 604800))
+                     OR (ncs.last_comment_timestamp > (' . $current_time . ' - 604800)))
+                   GROUP BY nid
+                   ORDER BY node_node_comment_statistics_last_updated DESC, ncs.comment_count DESC');
+  // retrive all the records and store that in $rows to add to table
+  while ($wiki_pages = db_fetch_object($sql)) {
+    // Add content to $rows
+    $rows[] = array(
+      l($wiki_pages->node_title, 'node/' . $wiki_pages->nid),
+      date('d M, Y H:i:s', $wiki_pages->changed),
+      date('d M, Y H:i:s', $wiki_pages->last_comment_timestamp),
+      //$node_count = $wiki_pages->nvcount,
+      //$node_comment_count = $wiki_pages->comment_count,
+    );
+    // Create an array to exclude from next query
+    $node_id_to_exclude_arr[] = $wiki_pages->nid;
+  }
+  $node_id_to_exclude = implode(',', $node_id_to_exclude_arr);
+  // Add another row which will show admin that these are rest of contents which were updated before last week
+  $rows[] = array(
+    array(
+      'data' => '<b>Older</b>',
+      'colspan' => '5',
+      'class' => 'date'
+    )
+  );
+  // Query all updates that happened before last week.
+  $sql = db_query('SELECT DISTINCT(node.nid), node.title AS node_title, node.changed, node.type, ncs.comment_count,
+                   count(nr.nid) AS nvcount, ncs.last_comment_timestamp,
+                   GREATEST(count(nr.nid), ncs.comment_count) AS node_node_comment_count,
+                   GREATEST(node.changed, ncs.last_comment_timestamp) AS node_node_comment_statistics_last_updated
+                   FROM {node} AS node
+                   INNER JOIN {node_revisions} AS nr ON node.nid = nr.nid
+                   INNER JOIN {node_comment_statistics} AS ncs ON node.nid = ncs.nid
+                   WHERE (node.status = 1)
+                   AND (node.type in ("wiki_page"))
+                   AND (node.nid NOT IN (' . $node_id_to_exclude . '))
+                   GROUP BY nid
+                   ORDER BY node_node_comment_statistics_last_updated DESC, ncs.comment_count DESC');
+  // retrive all the records and store that in $rows to add to table
+  while ($wiki_pages = db_fetch_object($sql)) {
+    // Add content to $rows
+    $rows[] = array(
+      l($wiki_pages->node_title, 'node/' . $wiki_pages->nid),
+      date('d M, Y H:i:s', $wiki_pages->changed),
+      date('d M, Y H:i:s', $wiki_pages->last_comment_timestamp),
+      //$node_count = $wiki_pages->nvcount,
+      //$node_comment_count = $wiki_pages->comment_count,
+    );
+  }
+  // If there are rows then call theme function
+  if (count($rows) > 0) {
+    $output = theme('table', $header, $rows);
+  } // else show empty text.
+  else {
+    $output = 'No Content found.';
+  }
+  return $output;
+}
+
+/**
+ * Custom Submit handler for flag form
+ * @param unknown_type $form
+ * @param unknown_type $form_state
+ */
+function flag_delete_business_node_custom_submit($form, &$form_state) {
+  global $user, $base_url;
+  $node_details = db_fetch_object(db_query('SELECT node.title, nt.name FROM {node}
+                  INNER JOIN {node_type} AS nt ON node.type = nt.type WHERE node.nid = %d', $form_state['values']['content_id']));
+  $form['flag_reason_for_deletion'] = array(
+    '#type' => 'radios',
+    '#title' => t('Reason for Deleting'),
+    '#options' => array(
+      'listing_doesnt_exist' => t('Listing doesn’t exist'),
+      'i_dont_want_my_business_listed' => t('I don’t want my business listed'),
+      'offensive' => t('Offensive'),
+    ),
+    '#weight' => -2,
+  );
+  if ($form_state['values']['flag_reason_for_deletion'] == 'listing_doesnt_exist') {
+    $reason = t('Listing doesn\'t exist');
+  }
+  else if ($form_state['values']['flag_reason_for_deletion'] == 'i_dont_want_my_business_listed') {
+    $reason = t('I don\'t want my business listed');
+  }
+  else {
+    $reason = t('Offensive');
+  }
+  if (db_result(db_query('SELECT status FROM {system} WHERE name = "pathauto"')) == 1) {
+    $node_url = $base_url . '/' . db_result(db_query('SELECT dst FROM {url_alias} WHERE src LIKE "node/%d"', $form_state['values']['content_id']));
+  }
+  else {
+    $node_url = $base_url . '/' . 'node/' . $form_state['values']['content_id'];
+  }
+  $tokens = array(
+    '!title' => $node_details->title,
+    '!type' => $node_details->name,
+    '!username' => $user->name,
+    '!link' => $node_url,
+    '!reason' => $reason,
+    '!comment' => $form_state['values']['flag_comments'],
+  );
+  $message = array(
+    'to' => variable_get('site_mail', ''),
+    'subject' => '[' . variable_get('site_name', '') . '] - Content Mark for Deletion',
+    'body' => strtr(t("Hello Admin,\n\nThe content !title of type !type has been marked for deletion by !username." .
+              "\n-----------------------------------------------\nReason: !reason\nComments: !comment\n\nPlease visit" .
+              " !link for more details.\n\nThank you,\n" . variable_get('site_name', '') . " Team"), $tokens),
+    'headers' => array('From' => variable_get('site_mail', '')),
+  );
+  $sent = drupal_mail_send($message);
+  if (!$sent) {
+    watchdog('custom_forms', 'Unable to send email for flag deletion');
+  }
+}
+
+/**
+ * Callback function for sending messages
+ */
+function custom_forms_message_all_subscribers_form() {
+  global $user;
+  $form = array();
+  $node_type = db_result(db_query('SELECT type FROM {node} WHERE nid = %d', arg(1)));
+  $node_author = db_result(db_query('SELECT uid FROM {node} WHERE nid = %d', arg(1)));
+  if ($node_type != 'business' || $node_author != $user->uid) {
+    drupal_goto();
+  }
+  // Select all the available options for communication options CCK field and show them here.
+  $result = db_result(db_query('SELECT global_settings FROM {content_node_field} WHERE field_name = "field_ctl_communication_options"'));
+  $field_global_settings = unserialize($result);
+  $communication_options_options = explode("\n", $field_global_settings['allowed_values']);
+  foreach ($communication_options_options AS $values) {
+    $var = explode("|", $values);
+    $communication_options_options_revised[$var[0]] = $var[1];
+  }
+  $form['listing_id'] = array(
+    '#type' => 'hidden',
+    '#value' => arg(1),
+  );
+  $form['communication_options'] = array(
+    '#type' => 'checkboxes',
+    '#title' => t('Communication Types'),
+    '#options' => $communication_options_options_revised,
+  );
+  $form['email'] = array(
+    '#type' => 'fieldset',
+    '#title' => t('!site Connection Listing E-Mail Notification', array('!site' => variable_get('site_name', ''))),
+    '#collapsible' => TRUE,
+    '#collapsed' => FALSE,
+  );
+  $form['email']['connection_listing_subject'] = array(
+    '#type' => 'textfield',
+    '#title' => t('Subject'),
+    '#default_value' => t(''),
+    '#maxlength' => 180,
+    '#required' => TRUE,
+  );
+  $form['email']['connection_listing_body'] = array(
+    '#type' => 'textarea',
+    '#title' => t('Body'),
+    '#default_value' => t(''),
+    '#rows' => 10,
+    '#required' => TRUE,
+  );
+  $form['submit'] = array(
+    '#type' => 'submit',
+    '#value' => t('Send Message'),
+  );
+  return $form;
+}
+
+/**
+ * Submit handler for custom_forms_message_all_subscribers_form
+ * @param array $form
+ * @param array $form_state
+ */
+function custom_forms_message_all_subscribers_form_submit($form, &$form_state) {
+  global $base_url;
+  $listing_id = $form_state['values']['listing_id'];
+  foreach ($form_state['values'] AS $key => $value) {
+    if ($key == 'communication_options') {
+      $comm_options = '"' . implode('","', $value) . '"';
+      $sql = 'SELECT DISTINCT(node.uid) AS node_author FROM {node}
+        INNER JOIN {content_field_ctl_communication_options} AS ctctb ON node.nid = ctctb.nid
+        WHERE ctctb.field_ctl_communication_options_value IN (' . $comm_options . ')';
+      $query = db_query($sql);
+      while ($result = db_fetch_object($query)) {
+        // create a $message array to send an email to users.
+        $message = array(
+          'to' => db_result(db_query('SELECT mail FROM {users} WHERE uid = %d', $result->node_author)),
+          'subject' => $form_state['values']['connection_listing_subject'],
+          'body' => $form_state['values']['connection_listing_body'],
+          'headers' => array('From' => variable_get('site_mail', '')),
+        );
+        // Send mail to user
+        $mail_response = drupal_mail_send($message);
+        if (!$mail_response) {
+          watchdog('custom_forms', "Unable to send message to user !username.", $tokens);
+        }
+      }
+    }
+  }
+}

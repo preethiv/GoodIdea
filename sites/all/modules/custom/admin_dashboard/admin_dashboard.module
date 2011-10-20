@@ -1,0 +1,105 @@
+<?php
+// $Id$ admin_dashboard.module v1.0 Gaurav Kumar
+
+/**
+ * @filesource
+ */
+
+/**
+ * Implementation of hook_perm().
+ */
+function admin_dashboard_perm() {
+  return array('administer dashboard');
+}
+
+/**
+ * Implementation of hook_menu()
+ */
+function admin_dashboard_menu() {
+  $items = array();
+  $items['admin/build/dashboard'] = array(
+    'title' => t('Admin Dashboard'),
+    'page callback' => 'admin_dashboard',
+    'access callback' => 'user_access',
+    'access arguments' => array('administer dashboard'),
+    'type' => MENU_NORMAL_ITEM,
+  );
+  return $items;
+}
+
+/**
+ * Callback function for Admin Dashboard
+ */
+function admin_dashboard() {
+  $links[]['data'] = array(
+    l(theme_image(drupal_get_path('module', 'admin_dashboard') . '/clipboard.png', 'New Content'), 'admin/build/dashboard/new-content', array('html' => TRUE)),
+    l('New Content', 'admin/build/dashboard/new-content'),
+    l('Help', 'http://atrium.townsourceproject.org/developers/notebook'),
+  );
+  $links[]['data'] = array(
+    l(theme_image(drupal_get_path('module', 'admin_dashboard') . '/clipboard.png', 'Updated Content'), 'admin/build/dashboard/updated-content', array('html' => TRUE)),
+    l('Updated Content', 'admin/build/dashboard/updated-content'),
+    l('Help', 'http://atrium.townsourceproject.org/developers/notebook'),
+  );
+  $links[]['data'] = array(
+    l(theme_image(drupal_get_path('module', 'admin_dashboard') . '/clipboard.png', 'Node Deletion Requests'), 'admin/build/dashboard/pages-for-deletion', array('html' => TRUE)),
+    l('Node Deletion Requests', 'admin/build/dashboard/pages-for-deletion'),
+    l('Help', 'http://atrium.townsourceproject.org/developers/notebook'),
+  );
+  $links[]['data'] = array(
+    l(theme_image(drupal_get_path('module', 'admin_dashboard') . '/clipboard.png', 'Townwiki Pages - New'), 'admin/build/dashboard/new-wiki-pages', array('html' => TRUE)),
+    l('Townwiki Pages - New', 'admin/build/dashboard/new-wiki-pages'),
+    l('Help', 'http://atrium.townsourceproject.org/developers/notebook'),
+  );
+  $links[]['data'] = array(
+    l(theme_image(drupal_get_path('module', 'admin_dashboard') . '/clipboard.png', 'Townwiki Pages - Need Improvement'), 'admin/build/dashboard/need-improvements-wiki-pages', array('html' => TRUE)),
+    l('Townwiki Pages - Need Improvement', 'admin/build/dashboard/need-improvements-wiki-pages'),
+    l('Help', 'http://atrium.townsourceproject.org/developers/notebook'),
+  );
+  $links[]['data'] = array(
+    l(theme_image(drupal_get_path('module', 'admin_dashboard') . '/clipboard.png', 'Townwiki Pages - Not Complete'), 'admin/build/dashboard/not-complete-wiki-pages', array('html' => TRUE)),
+    l('Townwiki Pages - Not Complete', 'admin/build/dashboard/not-complete-wiki-pages'),
+    l('Help', 'http://atrium.townsourceproject.org/developers/notebook'),
+  );
+  $links[]['data'] = array(
+    l(theme_image(drupal_get_path('module', 'admin_dashboard') . '/clipboard.png', 'Listings for Review'), 'admin/build/dashboard/listing-for-review', array('html' => TRUE)),
+    l('Listings for Review', 'admin/build/dashboard/listing-for-review'),
+    l('Help', 'http://atrium.townsourceproject.org/developers/notebook'),
+  );
+  $links[]['data'] = array(
+    l(theme_image(drupal_get_path('module', 'admin_dashboard') . '/clipboard.png', 'Articles for Review'), 'admin/build/dashboard/articles-for-review', array('html' => TRUE)),
+    l('Articles for Review', 'admin/build/dashboard/articles-for-review'),
+    l('Help', 'http://atrium.townsourceproject.org/developers/notebook'),
+  );
+  $links[]['data'] = array(
+    l(theme_image(drupal_get_path('module', 'admin_dashboard') . '/clipboard.png', 'Promotions for Review'), 'admin/build/dashboard/promotions-for-review', array('html' => TRUE)),
+    l('Promotions for Review', 'admin/build/dashboard/promotions-for-review'),
+    l('Help', 'http://atrium.townsourceproject.org/developers/notebook'),
+  );
+  $links[]['data'] = array(
+    l(theme_image(drupal_get_path('module', 'admin_dashboard') . '/clipboard.png', 'Uncategorized Pages'), 'admin/build/dashboard/uncategorized-pages-listing', array('html' => TRUE)),
+    l('Uncategorized Pages', 'admin/build/dashboard/uncategorized-pages-listing'),
+    l('Help', 'http://atrium.townsourceproject.org/developers/notebook'),
+  );
+  $links[]['data'] = array(
+    l(theme_image(drupal_get_path('module', 'admin_dashboard') . '/clipboard.png', 'Archive Pages'), 'admin/build/dashboard/archive-contents-listing', array('html' => TRUE)),
+    l('Archive Pages', 'admin/build/dashboard/archive-contents-listing'),
+    l('Help', 'http://atrium.townsourceproject.org/developers/notebook'),
+  );
+  $links[]['data'] = array(
+    l(theme_image(drupal_get_path('module', 'admin_dashboard') . '/clipboard.png', 'Recent Changes in Wiki pages'), 'admin/build/dashboard/recent-changes-wiki-pages', array('html' => TRUE)),
+    l('Recent Changes in Wiki pages', 'admin/build/dashboard/recent-changes-wiki-pages'),
+    l('Help', 'http://atrium.townsourceproject.org/developers/notebook'),
+  );
+  $links[]['data'] = array(
+    l(theme_image(drupal_get_path('module', 'admin_dashboard') . '/clipboard.png', 'Requested wiki pages'), 'admin/build/dashboard/requested-wiki-pages', array('html' => TRUE)),
+    l('Requested wiki pages', 'admin/build/dashboard/requested-wiki-pages'),
+    l('Help', 'http://atrium.townsourceproject.org/developers/notebook'),
+  );
+  $links[]['data'] = array(
+    l(theme_image(drupal_get_path('module', 'admin_dashboard') . '/clipboard.png', 'High Activity Areas'), 'admin/build/dashboard/high-activity-areas', array('html' => TRUE)),
+    l('High Activity Areas', 'admin/build/dashboard/high-activity-areas'),
+    l('Help', 'http://atrium.townsourceproject.org/developers/notebook'),
+  );
+  return theme_table(array('', 'Description', 'Help'), $links);
+}

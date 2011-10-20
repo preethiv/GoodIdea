@@ -1,0 +1,8 @@
+name = Flag Fields
+description = "Allow us to specify a form with custom fields per flag per content type (possibly a webform) per action (flag or unflag)"
+core = 6.x
+dependencies[] = flag
+dependencies[] = webform
+package = Flags
+version = 6.x-1.0
+project = "flag_fields"
