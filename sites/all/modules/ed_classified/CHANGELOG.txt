@@ -1,0 +1,49 @@
+// $Id: CHANGELOG.txt,v 1.1.2.10 2009/08/13 02:12:27 milesgillham Exp $
+
+Classified Ads 6.x-2.0-ALPHA6, 2009-08-13
+-----------------------------------------
+Fixed #529936: Remove copyright from ed_classified pages
+Fixed #532712: Expired ads
+Fixed #532712-3: variable is not an array or object
+Fixed #540336: Don't display ad reset option if user does not have permission to reset
+Fixed #296415: Update module to use Drupal 6 module_load_include functionality
+
+Classified Ads 6.x-2.0-ALPHA5, 2009-07-24
+-----------------------------------------
+Fixed #529052: Reset Ad Expiration - Not working
+Fixed #529504: Category listing shows incorrect expiry dates
+Fixed #341193: Automatic teaser truncation to x characters
+
+Classified Ads 6.x-2.0-ALPHA4, 2009-07-11
+-----------------------------------------
+Applied Code Review module at critical and normal levels to tidy up code.
+Applied Code Review to check 5.x conversion and formatting
+Refixed #503792 by milesgillham: E-mail notifications were still brokenn
+Fixed #510506: Views2 support needed
+Fixed #506746: Taxonomy-dependent durations not updating on settings page
+
+Classified Ads 6.x-2.0-ALPHA3, 2009-06-30
+-----------------------------------------
+Changed site configuration title to be in line with other Drupal modules
+Fixed #225362-34 by AlexisWilke: tweaked select for postgres user, minor fixups
+Fixed #503792 by milesgillham: E-mail notifications are broken
+Fixed #503906: Purge old expired ads gives white screen
+Fixed #504296 by milesgillham: Ads expire immediately as they are created
+Fixed #504310 by milesgillham: Anchor (link) tag titles are missing
+
+Classified Ads 6.x-2.0-ALPHA2, 2009-06-26
+-----------------------------------------
+Added CHANGELOG.txt, INSTALL.txt by milesgillham
+Changed README.txt by milesgillham
+Added #378250 by sbordage: french translation (fr.po)
+Fixed #225362-29 by AlexisWilke: Postgres errors
+Fixed #225362-31 by AlexisWilke: Postgres single quotes
+Fixed/Changed #225362-34 by AlexisWilke: Large number of fixes and tuning
+Fixed #281747 by milesgillham: Invalid argument supplied on cron run
+Fixed #332828 by phdhiren: All revisions comes in the list
+Fixed #332851 by phdhiren: All data in My Classified Ad List link
+Fixed #355119 by milesgillham: Users unable to edit own classifieds
+Fixed #359933 by milesgillham: Call to undefined function _ed_classified_notify_user_of_ad_expiration
+Fixed #397686 by milesgillham: Missing table-prefix
+Fixed #402770 by milesgillham: recoverable fatal error
+Fixed #501642 by milesgillham: Unknown column node_counter.nid

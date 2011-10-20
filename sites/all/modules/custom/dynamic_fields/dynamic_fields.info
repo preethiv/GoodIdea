@@ -1,0 +1,8 @@
+; $Id$
+name = Dynamic Fields
+description = Allows A CCK field be specified as a controller whose options controls the dynamic display of other fields via AHAH.
+dependencies[] = content
+dependencies[] = content_taxonomy
+; The following CCK submodules are necessary: Text, Number, Node Reference and Options Widget.
+package = CCK
+core = 6.x

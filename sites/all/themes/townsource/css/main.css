@@ -1,0 +1,1427 @@
+@charset "UTF-8";
+
+/************************************************
+                  Some Reset 
+ ************************************************/
+h1, h2, h3, h4, h5, h6,p {
+  padding:0;
+  margin:0;
+}
+
+/************************************************
+                 General Styles 
+ ************************************************/
+body {
+  margin:0;
+  padding:0
+}
+
+body {
+  font-family:Arial, Helvetica, sans-serif;
+  font-size:12px;
+  color:#797979;
+  color:#444;
+  background:url(../images/mainBg.jpg) repeat-x top #e9f4fa;
+  padding-top:5px; /* This is required because of some weird thing 960 is doing */
+}
+
+body.admin-menu{
+  margin-top:0px !important;
+}
+
+a {
+  text-decoration:none;
+  color:#009cff;
+}
+
+a:hover {
+  text-decoration:underline;
+}
+
+/************************************************
+                   Top Menu 
+ ************************************************/
+#top-menu {
+  clear:both;
+  height:auto;
+  padding:0px 0 0 0;
+  text-transform:uppercase;
+}
+
+#top-menu ul{
+  list-style:none;
+}
+
+#top-menu ul li{
+  display:block;
+  float:left;
+}
+
+#top-menu ul li a{
+  float:left;
+  display:block;
+  text-align:center;
+  background:url(../images/topMenuBg.png) repeat-x;
+  line-height:35px;
+  font-size:13px;
+  color:#ffffff;
+  padding:0 15.6px;
+  font-weight:700;
+}
+
+#top-menu ul li a.active,
+#top-menu ul li a:hover{
+  background:#ffffff;
+  color:#009cff;
+  text-decoration:none;
+}
+
+/*************************************************************************
+               Top Menu: Rounded corners implementation
+ **
+ ** this is perhaps not the best way to implement the round corners here,
+ ** but it works for now and I'm leaving it like this. 
+ **
+ *************************************************************************/
+#top-menu ul li.first a {
+  background:url(../images/topMenuFirstNrml.png) no-repeat right top;
+  padding:0;
+  height:35px;
+  width:84px;
+}
+
+#top-menu ul li.first a.active,
+#top-menu ul li.first a:hover {
+  background:url(../images/topMenuFirstHvr.png) no-repeat right top;
+}
+
+#top-menu ul li.last a {
+  padding:0;
+  height:35px;
+  width:124px;
+  background:url(../images/topMenuLastNrml.png) no-repeat left top;
+}
+
+#top-menu ul li.last a.active,
+#top-menu ul li.last a:hover {
+  background:url(../images/topMenuLastHvr.png) no-repeat left top;
+}
+
+/************************************************
+                   Header 
+ ************************************************/
+#logo {
+  padding:32px 0 13px 0;
+  width:361px !important;
+}
+
+/************************************************
+             Top Right Corner Area 
+ ************************************************/
+#top-corner-bar {
+  margin:10px 0 0 0;
+  float:right;
+  background:url(../images/topCornerBg.jpg) repeat-x left top;
+  width:543px !important;
+  height:40px;
+  line-height:17px;
+  text-align:center;
+  font-size:11px;
+  color:#ffffff;
+}
+
+#top-corner-bar a{
+  font-weight:700;
+  color:#ffffff;
+}
+
+#user-top-text-left {
+  float:left;
+  margin-left:70px;
+}
+
+#user-top-text-right {
+  float:right;
+  margin-right:50px;
+}
+
+/************************************************
+                  Tagline Area 
+ ************************************************/
+#under-menu {
+  margin-top:-10px;
+  background:#ffffff;
+}
+
+#tagline p{
+  color:#0074be;
+  font-weight:700;
+  line-height:38px;
+  text-align:center;
+  font-size:1.1em;
+}
+
+#tagline p a.get-started {
+  background:url("../images/get-started.png") no-repeat scroll 0 1px
+    transparent;
+  color:transparent;
+  margin-left:15px;
+  padding-right:92px;
+  padding-top:22px;
+  position:relative;
+  top:13px;
+}
+
+/************************************************
+                   Search Area 
+ ************************************************/
+#search-area {
+  border-left:1px solid #cfcece;
+  border-right:1px solid #cfcece;
+  border-bottom:1px solid #cfcece;
+  background:url(../images/searchBoxRptr.png) repeat-x bottom #ffffff;
+  -moz-border-radius:3px;
+  border-radius:0 0 5px 5px;
+}
+
+#search-form {
+  text-align:center;
+  margin:17px auto;
+}
+
+#search-theme-form #edit-search-theme-form-1 {
+  padding:5px;
+  border-radius:3px;
+  border:2px solid #777;
+  font-size:1.1em;
+}
+
+#search-theme-form .form-submit {
+  position:relative;
+  top:8px;
+  left:8px;
+}
+
+#search-theme-form .form-text {
+  color:#888;
+}
+
+/************************************************
+                 Content Area 
+ ************************************************/
+#content {
+  background:#ffffff;
+  clear:both;
+  margin:0px auto;
+  height:auto;
+  margin-top:5px;
+  border:1px solid #b8e2f6;
+  -moz-border-radius:10px;
+  border-radius:10px;
+  padding:10px 0;
+}
+
+.inner-content {
+  background:#FFFFFF;
+}
+
+/********** Styling for gray boxes around content **********/
+#content div.block,#content div.view,#content div.content-block {
+  margin:0 0 5px 0;
+  border:1px solid #d8d8d8;
+}
+
+#content div.view div.block,
+#content div.view div.content-block,
+#content div.block div.view,
+#content #right-sidebar div.block div.content-block,
+#content div.content-profile-display{
+  border:none;
+  margin:0;
+  padding:0;
+}
+
+/********** Styling for the gradient block and page titles **********/
+#content .view h1,
+#content .block-title h2,
+#content .node-type-name h1 {
+  border-bottom:1px solid #d8d8d8;
+  line-height:30px;
+  font-size:14px;
+  color:#000000;
+  background:#ddd;
+  display:block;
+  padding:0 0 0 15px;
+  margin:0;
+  background:url(../images/commonGrayBar.png) repeat-x;
+}
+
+#content .view .block-title h2 {
+  margin-top:-26px;
+}
+
+#content div.block h1,
+#content div.content-block h1 {
+  margin:0px;
+}
+
+/************************************************
+              Right Sidebar Area 
+ ************************************************/
+#right-sidebar div.block {
+  background:#c8ecff;
+  border:1px solid #52c9ff;
+  padding:0;
+  margin:0 0 10px 0;
+}
+
+#right-sidebar .block h2 {
+  border-bottom:1px solid #52c9ff;
+  line-height:35px;
+  font-size:18px;
+  color:#0080ff;
+  background:#ffffff;
+  display:block;
+  padding:0 0 0 10px;
+  margin:0;
+}
+
+#right-sidebar .block p {
+  margin:5px 5px;
+}
+
+#right-sidebar .block .content {
+  margin-top:10px;
+}
+
+#right-sidebar .block ul {
+  margin:0;
+  padding:0;
+}
+
+#right-sidebar .block ul li {
+  display:block;
+  padding:7px 7px 7px 10px;
+  border-bottom:1px solid #52c9ff;
+  margin:0;
+  font-weight:bold;
+}
+
+#right-sidebar .block ul li:before {
+  content:"\00BB \0020";
+  padding-right:2px;
+}
+
+#right-sidebar .block ul li ul li {
+  margin-left:15px;
+  font-weight:normal;
+}
+
+#right-sidebar .block ul li ul li:before {
+  content:none;
+}
+
+#right-sidebar .block ul li.last {
+  border-bottom:none;
+}
+
+#right-sidebar .block ul li ul li.first .start-collapsed {
+  border-top:1px solid #52c9ff;
+}
+
+/************************************************
+               Individual Blocks 
+ ************************************************/
+
+/********** Styling for custom Davissource blocks **********/
+#block-davissource-connect-flag,
+#block-davissource-interested-flag,
+#block-davissource-submit-article,
+#block-davissource-submit-event,
+#block-davissource-submit-wiki-page,
+#block-davissource-submit-business,
+#block-davissource-submit-promotion,
+#block-davissource-submit-classified,
+#block-custom_forms-contact-listing,
+#block-views-connected_users-block_1 span.block-title,
+#block-custom_forms-listing-photo-gallery span.block-title{
+  line-height:50px;
+  text-align:center;
+}
+
+#block-custom_forms-listing-photo-gallery div.content,
+#block-custom_forms-listings-connection-details div.content div.no-connection-found{
+  margin:7px !important;
+}
+#block-custom_forms-listing-photo-gallery div.content div.blocks-add-more,
+#block-custom_forms-listings-connection-details div.content div.blocks-add-more{
+  margin:5px;
+  float:right;
+}
+
+#block-custom_forms-listing-photo-gallery div.content table tbody,
+#block-custom_forms-listing-photo-gallery div.content table tbody tr,
+#block-custom_forms-listings-connection-details div.content table tbody,
+#block-custom_forms-listings-connection-details div.content table tbody tr{
+  background-color:transparent;
+  border:medium none transparent;
+}
+#block-custom_forms-listings-connection-details div.content table tbody tr td{
+  padding:5px;
+}
+
+#contact-pre,
+#contact-mail-page {
+  margin:10px;
+}
+
+#right-sidebar #block-davissource-our-location,
+#right-sidebar #block-davissource-user-homepage{
+  background:#FFFAEF;
+}
+
+#right-sidebar #block-davissource-our-location h2,
+#right-sidebar #block-davissource-user-homepage h2{
+  color:#333;
+  border:none;
+  background:none;
+  line-height:35px;
+  margin-bottom:-10px;
+  border-bottom:solid 1px #ddd;
+}
+
+#right-sidebar #block-davissource-user-homepage div.content {
+  padding-top:5px;
+}
+
+#right-sidebar #block-davissource-user-homepage #user-links {
+  font-size:0.8em;
+  display:block;
+  float:right;
+}
+
+#right-sidebar #block-davissource-user-homepage #user-links a {
+  margin:3px 5px 5px 7px;
+}
+
+/********** Block: Recently Added Users **********/
+#right-sidebar #block-views-connected_users-block_1 .views-field-field-image-fid{
+  padding:0 4px;
+}
+#right-sidebar #block-views-recently_added_users-block_1 {
+  background-color:#FFF;
+  border:medium none;
+}
+#right-sidebar #block-views-recently_added_users-block_1 span.block-title h2{
+  -moz-border-bottom-colors:none;
+  -moz-border-image:none;
+  -moz-border-left-colors:none;
+  -moz-border-right-colors:none;
+  -moz-border-top-colors:none;
+  border-color:-moz-use-text-color;
+  border-right:medium none;
+  border-style:solid none none;
+  border-width:4px medium medium;
+  color:#049AFF;
+  line-height:20px;
+  padding-left:0;
+}
+#right-sidebar #block-views-recently_added_users-block_1 .content{
+  margin-top:2px;
+}
+#right-sidebar #block-views-recently_added_users-block_1 .content table tbody tr td div.views-field-field-image-fid a img{
+  border:1px solid #d6d7d1;
+  margin:-4px 1px;
+  padding:2px;
+}
+
+/********** Block: Popular Promotions **********/
+#content #main #block-views-popular_promotions-block_1 .field {
+  padding:1px 0;
+}
+
+/********** Block: Popular Events **********/
+#content #main #block-views-popular_events-block_1 .field {
+  padding:3px 0;
+}
+#content #main #block-views-popular_events-block_1 div.content .view-id-popular_events table tbody .content-block,
+#content #main #block-views-upcoming_events-block_1 div.content .view-id-upcoming_events table tbody .content-block{
+  width:345px;
+}
+/************************************************
+                     960 Grid 
+ ************************************************/
+
+/*
+ * the following two fixes are necessary because 960 grid elements do
+ * not work well with borders. For pages where the main area is divided
+ * into more columns, we need to get rid of some margins to leave space
+ * for the borders that surround the main content area.
+ */
+.grid_12 div.alpha {
+  margin-right:9px;
+}
+
+.grid_12 div.omega {
+  margin-left:9px;
+}
+
+.grid_4 div.alpha {
+  margin-right:9px;
+}
+
+.grid_4 div.omega {
+  margin-left:9px;
+}
+
+/************************************************
+                  Heartbeat 
+ ************************************************/
+.field-ds-message {
+  font-weight:bold;
+  display:inline-block;
+  float:left;
+  margin-right:15px;
+}
+
+.hds-region-header {
+  padding:10px;
+}
+
+.heartbeat-message-block {
+  padding:5px 0;
+  border-bottom:1px solid #eee;
+}
+
+.activity-time {
+  color:#888;
+  font-size:.9em;
+  display:inline-block;
+}
+
+/************************************************
+                     Flag 
+ ************************************************/
+.flag-wrapper .message {
+  position:inherit;
+  top:auto;
+  line-height:normal;
+  left:auto;
+  width:auto;
+  font-size:auto;
+  font-weight:bold;
+}
+
+.flag-wrapper.flag-connect span.message,
+.flag-wrapper.flag-interested span.message{
+  display:block;
+  font-size:1.2em;
+  margin-top:20px;
+}
+
+/************************************************
+                     Views 
+ ************************************************/
+
+/********** Views:Grid views styles **********/
+.view tr {
+  display:block;
+  margin-bottom:7px;
+  /*width:698px;*/
+}
+
+.view tr.row-first {
+  margin-top:7px;
+}
+
+.view td {
+  vertical-align:top;
+  text-align:center;
+}
+
+.view td:hover {
+  background-color:#eeeeee;
+}
+
+/********** Views:12 column -> 6 column grid views **********/
+.view table.views-view-grid.col-6 * {
+  padding:0;
+}
+
+.view table.views-view-grid.col-6 .nd-region-middle-wrapper {
+  margin-left:7px;
+  margin-right:7px;
+}
+
+.view table.views-view-grid.col-6 td.col-first .nd-region-middle-wrapper
+  {
+  margin-left:14px;
+}
+
+.view table.views-view-grid.col-6 td.col-last .nd-region-middle-wrapper
+  {
+  margin-right:14px;
+}
+
+.view table.views-view-grid.col-6 td .field-title {
+  padding:0;
+  margin-top:-7px;
+}
+
+.view table.views-view-grid.col-6 td .field-title a {
+  font-size:1em;
+  font-weight:normal;
+}
+
+/********** Views:Browse page views **********/
+.views-exposed-form {
+  border-bottom:1px solid #d8d8d8;
+  padding:10px 0;
+}
+
+.views-exposed-form .views-exposed-widget {
+  float:left;
+  position:relative;
+  left:370px;
+  top:0;
+}
+
+.views-exposed-widget.views-widget-filter-text .views-widget {
+  display:inline-block;
+}
+
+.views-exposed-widget.views-widget-filter-text label {
+  margin:0 7px 0 10px;
+}
+
+.views-exposed-widget.views-widget-filter-text .views-submit-button {
+  float:right;
+  position:relative;
+}
+
+.views-exposed-form .views-exposed-widget .form-submit {
+  margin-top:2px;
+}
+
+.view.browse-page div.views-row {
+  border-bottom:1px solid #d8d8d8;
+  padding:7px 0;
+  margin:0;
+}
+
+.view.browse-page div.views-row-odd {
+  background:#e8e8e8;
+}
+
+.views-exposed-form #edit-text {
+  border:1px solid #000;
+  width:120px;
+  padding:3px;
+  background:#ffffe0;
+}
+
+#view-results-number {
+  margin:7px 10px;
+  display:block;
+  color:#444444;
+}
+
+/********** Views:Popular Listings by Category (Front page) **********/
+.view.view-popular-listings-by-term .view-content {
+  margin-top:10px;
+}
+
+.view.view-popular-listings-by-term .item-list {
+  margin-bottom:5px;
+}
+
+/************************************************
+              Content and Wiki Pages 
+ ************************************************/
+.node div.content {
+  padding:10px;
+}
+
+.node #toc {
+  float:right;
+  margin-left:10px;
+}
+
+.node.wiki-page h2,
+.node.content-page h2 {
+  padding:0 0 10px 0;
+}
+
+.node.wiki-page h2,
+.node.content-page h3 {
+  padding:0 0 5px 0;
+}
+
+.node.wiki-page h2,
+.node.content-page p {
+  padding:5px 0 10px 0;
+}
+
+span.wysiwyg_imageupload.imgupl_floating_right {
+  margin:0 0 10px 10px;
+}
+
+/************************************************
+                Display Suite 
+ ************************************************/
+#content div.nd-region-middle-wrapper { /*padding:10px 10px;*/
+  
+}
+
+.nd-region-header,
+.nd-region-footer,
+.nd-region-right,
+.nd-region-middle {
+  padding:0;
+}
+
+.nd-region-header.alpha,
+.nd-region-footer.alpha,
+.nd-region-middle-wrapper.alpha .nd-region-middle{
+  padding-left:10px;
+}
+
+.nd-region-left.alpha {
+  padding-left:9px;
+}
+
+.nd-region-header.omega,
+.nd-region-footer.omega,
+.nd-region-right-wrapper.omega .nd-region-right,
+.nd-region-middle-wrapper.omega .nd-region-middle{
+  padding-right:10px;
+}
+
+#right-sidebar .nd-region-right-wrapper.omega {
+  margin-left:0;
+}
+
+#content div.buildmode-noderef_display,
+#content div.buildmode-heartbeat_teaser{
+  border:solid 1px #c8ecff;
+  -moz-border-radius:15px;
+  border-radius:15px;
+  background:#f8f8ff;
+}
+
+/************************************************
+              Miscellaneous Styles
+ ************************************************/
+.field {
+  padding:3px 0;
+}
+
+.float_right img {
+  float:right;
+  margin-left:5px;
+  margin-right:1px;
+}
+
+#right-sidebar .field {
+  padding:3px 0;
+}
+
+#content #main .field {
+  padding:5px 0;
+}
+
+#content #main .field h2 a {
+  color:#e79516;
+}
+
+.h2 {
+  font-size:1.5em;
+  font-weight:bold;
+}
+
+.featured-mark {
+  background:#009DFE;
+  color:white;
+  float:right;
+  padding:3px 25px;
+  -moz-border-radius:3px;
+  border-radius:3px;
+  font-weight:bold;
+}
+
+.content-type h2 {
+  color:#aaa;
+  font-size:1.2em;
+  margin:-10px 0;
+  padding:0;
+}
+
+.field-number-connected,
+.number-interested {
+  color:#777;
+  font-size:.9em;
+}
+
+.field-title p {
+  font-weight:bold;
+}
+
+#templink {
+  float:right;
+  padding:10px 10px 0 0;
+}
+
+/* view for popular  */
+.popu_view_box {
+  float:left;
+  height:120px;
+  margin:10px 10px 13px 9px;
+  overflow:hidden;
+  padding:0 0 10px;
+  width:330px;
+}
+
+.popu_view {
+  overflow:hidden;
+}
+
+.popu_view ul {
+  margin:0px 0 0 0;
+  padding:0 0 0 10px;
+  list-style:none;
+}
+
+.popu_view ul li {
+  margin:0;
+  display:block;
+  background:url(../images/arrow.gif) no-repeat 0 -24px;
+  padding:3px 0 0 12px;
+  font:bold 12px Arial;
+  color:#009cff;
+}
+
+.popu_view ul li span {
+  width:100%;
+  clear:both;
+  margin:15px 0 0 0;
+  color:#929aa4;
+  font:normal 12px Arial;
+}
+
+.popu_view ul li a {
+  text-decoration:none;
+  color:#009cff;
+}
+
+.popu_view ul li a:hover {
+  text-decoration:underline;
+}
+
+.popu_view_box h4 {
+  border-bottom:1px solid #b9e4ed;
+  color:#000;
+  margin:0 0 5px 0;
+  padding:0 0 5px 0;
+  font:bold 14px Arial;
+}
+
+.popu_view_box p {
+  color:#ef6c1d;
+  margin:2px 0 0 0;
+  padding:0 8px 10px 0;
+  font:normal 11px Arial;
+  text-align:justify;
+}
+
+.popu_view_box img {
+  width:85px;
+  height:85px;
+  float:left;
+  margin:5px 5px 0 0;
+  padding:4px;
+  border:1px solid #b9e4ed;
+}
+
+.popu_view li p {
+  height:0px;
+  color:#929AA4;
+}
+
+div.popu_view_box h4 span.popular-listings-arrow,
+div.popu_view_box2 h4 span.popular-listings-arrow{
+  background:url("../images/arrow.gif") no-repeat scroll right 4px transparent;
+  padding:0 0 0 12px;
+}
+/* end view for popular */
+/* view for All listing  */
+.popu_view_box2 {
+  float:left;
+  height:107px;
+  width:210px;
+  margin:10px 10px 0 12px;
+  padding:0 0 10px 0;
+  overflow:hidden;
+}
+
+.popu_view2 {
+  padding-top:0px;
+  padding-left:0px
+}
+
+.popu_view2 ul {
+  margin:0px 0 0 0;
+  padding:0px;
+  list-style:none;
+}
+
+.popu_view2 ul li {
+  margin:0;
+  display:block;
+  background:url(../images/arrow.gif) no-repeat 0 -24px;
+  padding:3px 0 0 12px;
+  font:bold 12px Arial;
+  color:#009cff;
+}
+
+.popu_view2 ul li span {
+  width:100%;
+  clear:both;
+  margin:0px 0 0 0;
+  color:#929aa4;
+  font:normal 12px Arial;
+}
+
+.popu_view2 ul li a {
+  text-decoration:none;
+  color:#009cff;
+}
+
+.popu_view2 ul li a:hover {
+  text-decoration:underline;
+}
+
+.popu_view_box2 h4 {
+  color:#000;
+  margin:0;
+  padding:0 0 5px 0;
+  font:bold 14px Arial;
+}
+/* end view for All Listing block */
+/* view for explore davis  */
+.popu_view_box3 {
+  float:left;
+  width:100px;
+  margin:0px 0px 0 0px;
+  padding:0 0 0px 0;
+  overflow:hidden;
+}
+
+.popu_view3 {
+  padding-top:0px;
+  padding-left:0px;
+}
+.popu_view3 ul {
+  margin:0px 0 0 0;
+  padding:0px;
+  list-style:none;
+  border:none;
+}
+.popu_view3 ul li {
+  margin:0px;
+  display:block;
+  color:#009cff;
+  border:none;
+  padding:0px;
+}
+.popu_view3 ul li a {
+  text-decoration:none;
+  color:#009cff;
+  border:none;
+  padding:0px
+}
+.popu_view3 ul li a:hover {
+  text-decoration:underline;
+  border:none;
+}
+.popu_view_box3 h4 {
+  border-bottom:1px solid #D9D9D9;
+  color:#000000;
+  font:bold 12px Arial;
+  margin:0 0 3px 10px;
+  padding:0 0 0;
+  text-transform:uppercase;
+}
+#content #right-sidebar #block-views-explore_davis-block_1{
+  border:5px solid #D9D9D9;
+  padding-bottom:5px;
+}
+#block-views-explore_davis-block_1 span.block-title h2{
+  border-bottom:1px solid #D9D9D9;
+  color:#0D4C99;
+  font-size:17px;
+  line-height:33px;
+}
+#right-sidebar .popu_view_box3 ul li {
+  border:none;
+  margin-left:4px;
+  margin-top:10xp;
+  padding:0px;
+  padding-top:3px;
+  padding-bottom:3px;
+  font-size:9px;
+  font-weight:bolder;
+}
+/* end view for explore davis *
+
+
+/* top bar */
+#log-menu {
+  clear:both;
+  height:auto;
+  padding:0px 0 0 0;
+  margin:0;
+}
+
+#top-corner-bar ul {
+  list-style:none;
+  margin:0 0 0 40px;
+}
+
+#top-corner-bar ul li {
+  display:block;
+  float:left;
+  margin:0 0 0 3px !important;
+  background:url(../images/div.jpg) no-repeat right;
+}
+
+#top-corner-bar ul li a {
+  float:left;
+  display:block;
+  text-align:center;
+  font-size:12px;
+  color:#ffffff;
+  padding:0 7px;
+  font-weight:700;
+  [float:none;
+  float:none;
+  display:inline;]
+}
+
+#top-corner-bar ul li a.active,
+#top-corner-bar ul li a:hover {
+  color:#009cff;
+  text-decoration:none;
+}
+
+.town {
+  background-image:url(../images/town.gif) no-repeat left;
+  padding-left:20px !important;
+}
+
+.top-add {
+  height:45px;
+  width:373px;
+  float:right;
+}
+
+#block-menu-menu-myaccountblock span.block-title {
+  Display:none;
+}
+#myaccountblock ul li.first a {
+  /*background:url(../images/town.gif) no-repeat left !important;
+  padding-left:20px !important;*/
+}
+#myaccountblock ul{
+  padding: 0 0 0.25em 1em;
+}
+#myaccountblock ul li.first a img{
+  vertical-align:middle;
+}
+#myaccountblock ul li a span.private-msg-count{
+  background:none repeat scroll 0 0 #FDB106;
+  border-radius:2px 2px 2px 2px;
+  display:block;
+  float:right;
+  margin:0 0 0 5px;
+  width:15px;
+}
+
+#top-corner-bar ul.last {
+  background:none;
+}
+/*quick tab*/
+#content #block-quicktabs-1{
+  margin:15px 0;
+}
+.listing_box {
+  margin:10px 0 0 10px;
+  overflow:hidden;
+  width:645px;
+  border-bottom:1px solid #dee9ef;
+  padding:0 0 10px 0;
+}
+
+.listing_box h3 {
+  margin:5px 10px 1px 0;
+  font:bold 14px Arial;
+  float:left;
+  color:#069df6;
+  text-transform:uppercase;
+  width:84%;
+}
+
+.listing_box h3 a {
+  color:#069df6;
+  text-decoration:none;
+}
+
+.listing_box h3 a:hover {
+  color:#069df6;
+  text-decoration:underline;
+}
+
+.listing_box .star {
+  margin:-10px 0 0 1px;
+  float:right;
+}
+
+.listing_box p {
+  font:normal 11px Arial;
+  margin:7px 0;
+  padding:0 10px 0 0;
+  color:#666666;
+  text-align:justify;
+}
+
+.listing_box p a {
+  color:#069df6;
+  text-decoration:underline;
+}
+
+.listing_box p a:hover {
+  color:#069df6;
+  text-decoration:none;
+}
+
+.listing_images {
+  padding:3px;
+  float:left;
+  width:70px;
+  height:70px;
+  border:1px solid #cae8f4;
+  margin:7px;
+}
+/*end tab*/
+#block-views-justReviewed-block_1 {
+  border:0px solid red !important;
+  margin:0px;
+}
+
+#block-views-topReviewers-block_1 {
+  border:0px solid red !important;
+  margin:0px;
+}
+
+#block-views-blogViews-block_1 {
+  border:0px solid red !important;
+  margin:0px;
+}
+
+div.fivestar-widget-static .star {
+  height:20px !important;
+}
+/*end quick tap*/
+/*for right side block */
+#right-sidebar #block-davissource-yahoo-weather {
+  background-color:#c0d4dd;
+}
+
+#right-sidebar #block-views-explore_davis-block_1 {
+  background-color:#FFF;
+}
+
+#right-sidebar #block-ad-718{
+  background-color:#FFF;
+}
+#right-sidebar .block-ad{
+  background:none repeat scroll 0 0 transparent !important;
+  border:medium none !important;
+}
+#right-sidebar .block-ad .image-advertisement img{
+  border:1px solid #929AA4;
+}
+/*for end right side block */
+.h2 {
+  font-size:1.5em;
+  font-weight:bold;
+}
+
+.featured-mark {
+  background:blue;
+  color:white;
+  float:right;
+  padding:3px 5px;
+  -moz-border-radius:3px;
+  border-radius:3px;
+}
+
+.content-type h2 {
+  color:#aaa;
+  font-size:1.2em;
+  margin:-10px 0;
+  padding:0;
+}
+
+.field-number-connected,
+.number-interested {
+  color:#777;
+  font-size:.9em;
+}
+
+.field-title p {
+  font-weight:bold;
+}
+
+#templink {
+  float:right;
+  padding:10px 10px 0 0;
+}
+
+div.view-what-people-are-saying {}
+div.view-what-people-are-saying ul {}
+div.view-what-people-are-saying ul li {
+  border-bottom:1px solid #0099FF;
+  clear:both;
+  list-style:none outside none;
+  margin:0 0 15px;
+  min-height:100px;
+  width:98%;
+}
+
+div.view-what-people-are-saying ul li.views-row-last {
+  border-bottom:medium none;
+}
+
+div.view-what-people-are-saying ul li div.views-field-name,
+div.view-what-people-are-saying ul li div.views-field-field-image-fid,
+div.view-popular-listings-by-term ul li div.views-field-field-business-image-fid{
+  float:left;
+  margin-right:20px;
+  margin-top:-5px;
+}
+
+div.view-what-people-are-saying ul li div.views-field-field-rating-rating{
+  float:right;
+  margin:-32px 10px 15px 0;
+}
+
+div.view-what-people-are-saying ul li div.views-field-title a {
+  color:#0099ff;
+  font-size:15px;
+  font-weight:bold;
+  text-transform:uppercase;
+}
+
+div.view-what-people-are-saying ul li div.views-field-name {
+  margin-right:5px;
+}
+
+div.view-what-people-are-saying ul li div.views-field-name a,
+div.view-what-people-are-saying ul li div.views-field-body a,
+div.view-popular-listings-by-term ul li a{
+  color:#0099ff;
+  font-weight:bold;
+  text-decoration:underline;
+}
+
+div.view-what-people-are-saying ul li div.views-field-name,
+div.view-what-people-are-saying ul li div.views-field-created,
+div.view-what-people-are-saying ul li div.views-field-body{
+  color:#909090;
+  font-size:11px;
+  font-weight:bold;
+}
+
+div.view-what-people-are-saying ul li div.views-field-field-image-fid img,
+div.view-popular-listings-by-term ul li div.views-field-field-business-image-fid img{
+  background:none repeat scroll 0 0 transparent;
+  border:1px solid #0099FF;
+  padding:3px;
+}
+
+div.view-popular-listings-by-term {
+  margin:20px;
+}
+
+div.view-popular-listings-by-term div.item-list.grid-5 {
+  margin:15px 20px;
+  width:300px;
+}
+
+div.view-popular-listings-by-term h3 {
+  border-bottom:1px solid #0098FF;
+  color:#000000;
+  float:left;
+  font-size:12px;
+  margin:0 0 5px 130px;
+  text-transform:uppercase;
+  width:58%;
+}
+
+div.view-popular-listings-by-term h3 span.popular-listings-arrow {
+  background:url("../images/arrow.gif") no-repeat scroll right 4px
+    transparent;
+  padding:0 0 0 12px;
+}
+
+div.view-popular-listings-by-term ul {
+  clear:both;
+}
+
+div.view-popular-listings-by-term ul li {
+  list-style:none outside none;
+  margin:0 0 0px;
+}
+
+div.view-popular-listings-by-term ul li img {
+  margin:-15px -10px 0 0;
+}
+
+div.view-popular-listings-by-term ul #hide-image {
+  float:left;
+  margin:0;
+}
+
+div.view-popular-listings-by-term ul li.views-row-first {
+  margin:0;
+}
+
+div.view-popular-listings-by-term ul span a {
+  font-size:11px;
+  text-decoration:none;
+}
+
+div.view-popular-listings-by-term ul span a:hover {
+  text-decoration:underline;
+}
+
+//
+AUTOCOMPLETE VIEW
+#autocomplete ul {
+  background:none repeat scroll 0 0 #FFFFFF;
+}
+
+#autocomplete ul li {
+  background:none repeat scroll 0 0 #FFFFFF;
+  border-bottom:1px solid #000000;
+  clear:both;
+  list-style:none outside none;
+  min-height:60px;
+  padding:5px 0 5px;
+}
+
+#autocomplete ul li:hover {
+  background:none repeat scroll 0 0 #EFEFEF;
+  color:#000000;
+}
+
+#autocomplete ul li .views-field-title {
+  color:#224499;
+  font-size:14px;
+  font-weight:bold;
+}
+
+#autocomplete ul li .views-field-field-business-image-fid {
+  float:left;
+  padding:0 10px 10px 0;
+}
+
+#autocomplete ul li .views-field-field-business-description-value:hover,
+#autocomplete ul li .views-field-field-business-category-value:hover{
+  color:#000000;
+}
+
+#autocomplete ul li .views-field-field-business-category-value {}
+div.view-popular-listings-by-term div.view-header {
+  float:right;
+  margin:-33px 10px 0 0;
+}
+div.view-popular-listings-by-term div.view-header a {
+  color:#000000;
+  font-weight:bold;
+  text-decoration:underline;
+}
+#right-sidebar .advertisement:after{
+  color:#929AA4;
+  content:"Advertisement";
+  font-size: 11px;
+  font-weight: bold;
+  text-transform:uppercase;
+}
+
+/**/
+.view-users-listing-connection .view-content table.views-table{
+  width: 100%;
+}
+.view-users-listing-connection .view-content table.views-table thead tr th.views-field-title,
+.view-users-listing-connection .view-content table.views-table thead tr th.views-field-edit-node,
+.view-users-listing-connection .view-content table.views-table thead tr th.views-field-delete-node{
+  border:medium none;
+}
+.view-users-listing-connection .view-content table.views-table tbody tr td.views-field-title,
+.view-users-listing-connection .view-content table.views-table tbody tr td.views-field-edit-node,
+.view-users-listing-connection .view-content table.views-table tbody tr td.views-field-delete-node{
+  padding:0.3em 0.5em;
+}
+
+/* Wiki's Related to wiki */
+#block-views-wikis_related_to_wiki-block_1 .view-content .views-row{
+  height:50px;
+}
+#block-views-wikis_related_to_wiki-block_1 .view-content .views-row .views-field-field-image-fid{
+  display:block;
+  float:left;
+  padding:3px 10px;
+  width: 30px;
+}
+#block-views-wikis_related_to_wiki-block_1 .view-content .views-row .views-field-title{
+  width:160px;
+}
+#block-views-wikis_related_to_wiki-block_1 .view-content .views-row .views-field-title span.field-content a{
+  font-weight:bold;
+}
+
+/* Wiki Talk page */
+#content.container_16 div#comments{
+}
+#content.container_16 div#comments .comment{
+  background: none repeat scroll 0 0 #F8F8FF;
+  border: 1px solid #C8ECFF;
+  border-radius: 0.5em 0.5em 0.5em 0.5em;
+  margin-bottom: 10px;
+  padding: 10px;
+}
+#content.container_16 div#comments .comment span.new{
+  background: none repeat scroll 0 0 #FDB106;
+  border-radius: 2px 2px 2px 2px;
+  color: #FFFFFF;
+  float: right;
+  padding: 3px;
+}
+#content.container_16 div#comments .comment h3{
+  font-size: 21px;
+  width: 95%;
+}
+#content.container_16 div#comments .comment div.submitted{
+  font-size: 12px;
+  margin: 0 0 3px;
+}
+#content.container_16 div#comments .comment ul.links{
+  float: right;
+}
+
+/* For calendar view */
+.view div.view-content div.calendar-calendar tr {
+  display: table-row;
+}
+/* For calendar view */

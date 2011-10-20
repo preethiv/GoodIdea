@@ -1,0 +1,32 @@
+ul.classified-category-list { list-style: none; padding:1em; }
+ul.classified-ad-list li { background-image: none; }
+ul.classified-category-list li { margin-bottom: 2px; padding: .5em; background-image:none;}
+ul.classified-category-list .even { background-color: #eee; }
+ul.classified-category-list .odd { background-color: #ccc; }
+div.classified-cat-name {  font-weight: bold; padding:0; margin: 0; line-height: 1em;  }
+div.classified-description { margin:0; padding:0; display:inline; font-style:italic; }
+.classified-description { margin-bottom: 0px; line-height: 1.2em; margin-left: 2em; }
+ul.classified-category-list li div.classified-description p { display:inline; }
+ul.classified-category-list li div.title { margin-left: 1em; font-style:italic;  }
+ul.classified-category-list li div.created { margin-left: 1em; font-style: italic; font-size:smaller; }
+ul.classified-ad-list h3 { font-size:small; }
+ul.classified-category-list li .status { font-size: smaller; margin:0; padding:0; padding-right: 1em; text-align:right; width: 100%;}
+.classified-date { font-weight: bold; font-size: smaller; }
+span.classified-expiration-info, span.classified-expiration-expires-soon { font-weight: bold; text-align:right; display:block; margin-bottom: 1em; padding:.25em;}
+.classified-expiration-expires-soon { background-color: yellow; }
+.classified-expiration-expired { background-color: red; color: yellow; text-decoration: blink; }
+.classified-expiration-info { background-color: #eee; }
+.classified-body, .classified-teaser { margin-left: 20px; margin-top:1em; font-size: 1.2em; }
+div.classified-ad-block .marker { font-size:smaller; }
+div.classified-ad-block ul li { margin-bottom: .5em; }
+div.classified-ad-block ul li a { display:inline; }
+div.classified-ad-block ul li span { display:inline; }
+.classified-block-ad-term, .classified-block-ad-count, .classified-block-ad-age { margin-left: 1em; display: block; font-size: smaller; font-style:italic; }
+.classified-expired-flag { color:red; }
+.classified-unexpired-flag { color: green; }
+.node-classified { border: solid 1px silver; padding: 1em; }
+.classified-bodylength-exceeded { background-color: red; color: yellow; }
+.classified-bodylength-ok { color: green;}
+#classified-bodylength-msg { font-weight: bold; } 
+.classified-category-link-add { margin-left: 1em; }
+.classified-profile-link-add { margin-left: 0em; }

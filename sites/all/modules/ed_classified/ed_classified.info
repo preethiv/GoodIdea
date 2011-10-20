@@ -1,0 +1,13 @@
+; $Id $
+
+name = Classified Ads
+description = Add simple classified ad support to your site.  Development sponsored by <a href="http://exodusdev.com">Exodus Development</a>.
+dependencies[] = taxonomy
+
+
+; Information added by drupal.org packaging script on 2009-08-13
+version = "6.x-2.0-alpha6"
+core = "6.x"
+project = "ed_classified"
+datestamp = "1250130020"
+

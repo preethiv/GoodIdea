@@ -1,0 +1,3 @@
+name = Davis Source Utility Module
+description = This module handles all kinds of utility operations for Davis Source
+core = 6.x

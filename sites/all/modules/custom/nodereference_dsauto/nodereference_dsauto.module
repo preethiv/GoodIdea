@@ -1,0 +1,477 @@
+<?php
+
+function nodereference_dsauto_autocomplete( $build_mode, $selected_value = '' ) {
+  //  this is how nodereference figures out the nid
+  $matches = array();
+  if ( !empty( $selected_value ) ) {
+    preg_match('/^(?:\s*|(.*) )?\[\s*nid\s*:\s*(\d+)\s*\]$/', $selected_value, $matches );
+    if ( !empty( $matches ) ) {
+      list( , $title, $nid ) = $matches;
+      if ( !empty( $title ) && ( $n = node_load( $nid ) ) && trim( $title ) != trim( $n->title ) ) {
+        form_error( $element[ $field_key ], t('%name: title mismatch. Please check your selection.',
+          array( '%name' => t($field[ 'widget' ][ 'label' ] ) ) ) );
+      }
+      else {
+        if ( nodereference_dsauto_validate_build_mode( $build_mode ) ) {
+          $n->build_mode = $build_mode;
+        }
+
+		  //  this assumes that if DisplaySuite isn't available, that means that $n->build_mode will be ignored.
+        if ( !module_exists( 'ds' ) ) {
+		  if ( $build_mode == 'full' ) {
+            $matches[ 'replacevalue' ] = node_view( $n, FALSE );
+		  }
+		  else {
+            $matches[ 'replacevalue' ] = node_view( $n, TRUE );
+		  }
+		}
+		else {
+          $matches[ 'replacevalue' ] = node_view( $n );
+		}
+      }
+    }
+  }
+
+  drupal_json($matches);
+}
+
+/**
+ * Implementation of hook_menu().
+ */
+function nodereference_dsauto_menu() {
+  $items = array();
+  $items[ 'nodereference_dsauto_dscallback' ] = array(
+    'title' => 'Nodereference autocomplete',
+    'page callback' => 'nodereference_dsauto_autocomplete',
+    'access callback' => TRUE,
+    'type' => MENU_CALLBACK,
+  );
+  return $items;
+}
+
+/**
+ * @file
+ *   Adds a "URL" widget to the Node Reference field.
+ */
+
+/**
+ * Implements hook_theme().
+ */
+function nodereference_dsauto_theme() {
+  return array(
+    'nodereference_dsauto' => array(
+      'arguments' => array('element' => NULL),
+    ),
+  );
+}
+
+/**
+ * Implements hook_widget_info().
+ */
+function nodereference_dsauto_widget_info() {
+  return array(
+    'nodereference_dsauto' => array(
+      'label' => t('Display Suite autocomplete reference'),
+      'field types' => array('nodereference'),
+      'multiple values' => CONTENT_HANDLE_MODULE,
+      'callbacks' => array(
+        'default value' => CONTENT_CALLBACK_NONE,
+      ),
+    ),
+  );
+}
+
+/**
+ * Implements hook_link().
+ */
+function nodereference_dsauto_link($type, $object, $teaser = FALSE) {
+  if ($type == 'node') {
+    return nodereference_dsauto_build_all_links($object, $teaser);
+  }
+}
+
+/**
+ * Build an array of links for nodereference_dsauto widgets that point to this node.
+ *
+ * @param $node
+ *   A fully loaded node object.
+ * @param $teaser
+ *   
+ * @return
+ *   An array of links for use with theme_links().
+ */
+function nodereference_dsauto_build_all_links($node, $teaser) {
+  $links = array();
+  $fields = content_fields();
+  $instances = array();
+  foreach ($fields as $field_name => $field) {
+    foreach (_nodereference_dsauto_field_instances($field_name) as $target_type => $instance) {
+      if ($instance['widget']['type'] == 'nodereference_dsauto') {
+        $instances[$field_name] = $instance;
+        $instances[$field_name]['target_type'] = $target_type;
+      }
+    }
+  }
+
+  $alt_format = count($instances) > 1;
+  foreach ($instances as $field_name => $instance) {
+    $link_settings = $instance['widget']['node_link'];
+    if (($link_settings['teaser'] && $teaser == TRUE) || ($link_settings['full'] && $teaser == FALSE)) {
+      if ($link = nodereference_dsauto_build_link($node, $instance, $teaser, $alt_format)) {
+        $links[$target_type .'_'. $field_name] = $link;
+      }
+    }
+  }
+
+  return $links;
+}
+
+/**
+ * Build an individual link.
+ *
+ * Checks to ensure that the current node can be referenced by the field, ensures
+ * the current user has permission to create the field's node type, and builds
+ * the link based on the field's settings.
+ *
+ * @param $node
+ *   A fully loaded node object.
+ * @param $field
+ *   A CCK field instance.
+ * @param $teaser
+ *   Optional. The current display mode of the node. Defaults to FALSE.
+ * @param $alt_format
+ *   Optional. Use the alternative (safer but more verbose) format for
+ *   generating the link. Defaults to FALSE.
+ *
+ * @return
+ *   An array containing properties to build a single link.
+ */
+function nodereference_dsauto_build_link($node, $field, $teaser = FALSE, $alt_format = FALSE) {
+  $view_mode = $teaser ? 'teaser' : 'full';
+  $link = array();
+
+  // Check if this widget is using a views listing.
+  if (module_exists('views') && !empty($field['advanced_view']) && $field['advanced_view'] != '--') {
+    $referenceable = (bool) _nodereference_potential_references_views($field, '', NULL, array($node->nid), 1);
+  }
+  // Otherwise restrict by node type.
+  else {
+    $referenceable = !empty($field['referenceable_types'][$node->type]);
+  }
+
+  if ($referenceable && node_access('create', $field['type_name'])) {
+    $link_settings = $field['widget']['node_link'];
+    if (!empty($link_settings[$view_mode])) {
+      $link['title'] = t($link_settings['title']);
+      $link['query'] = array();
+
+      // Get the first "preferred" path for creating Node Reference links.
+      $link_urls = variable_get('nodereference_dsauto_paths', array('node/add/%type/%nid'));
+
+      // Basic wildcard replacement: %type and %nid.
+      $link_url = $link_urls[0];
+      $link_url = str_replace('%type', str_replace('_', '-', $field['type_name']), $link_url);
+      if ($alt_format) {
+        // The alternative format is used when there are multiple fields on the
+        // node edit form, so we can't just add an parameter at the end for NID.
+        $link_url = preg_replace('!/%nid$!', '', $link_url);
+        $field_name = str_replace('field_', '', $field['field_name']);
+        $link['query'][$field_name] = $node->nid;
+      }
+      else {
+        $link_url = str_replace('%nid', $node->nid, $link_url);
+      }
+      $link['href'] = $link_url;
+
+      if (!empty($link_settings['hover_title'])) {
+        $link['attributes']['title'] = t($link_settings['hover_title']);
+      }
+      if (!empty($link_settings['destination'])) {
+        if ($link_settings['destination'] == 'source') {
+          $link['query']['destination'] = isset($_REQUEST['destination']) ? $_REQUEST['destination'] : $_GET['q'];
+        }
+        elseif ($link_settings['destination'] == 'node') {
+          $link['query']['destination'] = drupal_get_path_alias('node/'. $node->nid);
+        }
+      }
+      if (module_exists('og')) {
+        // First try to get context based on the current page URL.
+        $group_node = og_get_group_context();
+
+        // Otherwise try getting the context based on the node being referenced.
+        if (!$group_node) {
+          $group_node = og_determine_context_get_group($node);
+        }
+
+        if ($group_node) {
+          $link['query']['gids'] = array($group_node->nid);
+        }
+      }
+    }
+  }
+
+  return $link;
+}
+
+/**
+ * Helper function for themers to easily create a link.
+ *
+ * This function should be used in custom themes, rather than making manual
+ * links because it first checks a user's access before showing the link. If
+ * the user does not have access to create the node then an empty string will
+ * be returned.
+ *
+ * @param $node
+ *   The node object that will be referenced.
+ * @param $field_name
+ *   The name of the Node Reference field.
+ * @param $type_name
+ *   The name of node type that contains the Node Reference field.
+ * @param $attributes
+ *   Optional. An array of additional attributes to add to the link.
+ */
+function nodereference_dsauto_create_link($node, $field_name, $type_name, $attributes = array()) {
+  $output = '';
+  $field = content_fields($field_name, $type_name);
+  $field['widget']['node_link']['full'] = TRUE;
+  if ($link = nodereference_dsauto_build_link($node, $field)) {
+    $options = array();
+    $link_attributes = isset($link['attributes']) ? (array) $link['attributes'] : array();
+    $options['attributes'] = $attributes + $link_attributes;
+    if ($link['query']) {
+      $options['query'] = $link['query'];
+    }
+    $output = l($link['title'], $link['href'], $options);
+  }
+  return $output;
+}
+
+/**
+ * Helper function to retrieve all instances of a field.
+ */
+function _nodereference_dsauto_field_instances($field_name) {
+  $info = _content_type_info();
+  $instances = array();
+  foreach (node_get_types('names') as $node_type => $node_type_name) {
+    if (isset($info['content types'][$node_type]['fields'][$field_name])) {
+      $instances[$node_type] = $info['content types'][$node_type]['fields'][$field_name];
+    }
+  }
+  return $instances;
+}
+
+/**
+ * Implements FAPI hook_elements().
+ *
+ * Any FAPI callbacks needed for individual widgets can be declared here,
+ * and the element will be passed to those callbacks for processing.
+ *
+ * Drupal will automatically theme the element using a theme with
+ * the same name as the hook_elements key.
+ *
+ * Autocomplete_path is not used by text_widget but other widgets can use it
+ * (see nodereference and userreference).
+ */
+function nodereference_dsauto_elements() {
+  return array(
+    'nodereference_dsauto' => array(
+      '#input' => TRUE,
+      '#columns' => array('nid'),
+      '#delta' => 0,
+      '#process' => array('_nodereference_dsauto_process'),
+    ),
+  );
+}
+
+/**
+ * Implements hook_widget_settings().
+ */
+function nodereference_dsauto_widget_settings($op, $widget) {
+  switch ($op) {
+    case 'form':
+      return nodereference_dsauto_field_widget_settings_form($widget);
+    case 'save':
+      return array( 'dsbuildmode' );
+  }
+}
+
+function nodereference_dsauto_validate_build_mode( $testMode ) {
+  $modes = nodereference_dsauto_get_dsbuildmode_options();
+
+  return isset( $modes[ $testMode ] );
+}
+
+function nodereference_dsauto_get_dsbuildmode_options() {
+  if ( !module_exists( 'ds' ) || !function_exists( 'ds_get_build_modes' ) ) {
+	return array( 'full' => t('Full node'), 'teaser' => t('Teaser') );
+  }
+
+  $retVal = array();
+
+  foreach ( ds_get_build_modes() as $module => $list ) {
+    foreach( $list as $k => $ary ) {
+      $retVal[ $k ] = $ary[ 'title' ];
+    }
+  }
+
+  return $retVal;
+}
+
+function nodereference_dsauto_field_widget_settings_form($widget) {
+  $settings = $widget;
+
+  $form = array();
+  if ($widget['type'] == 'nodereference_dsauto') {
+    $form['dsbuildmode'] = array(
+      '#type' => 'select',
+      '#title' => t('Display Suite build mode'),
+      '#options' => nodereference_dsauto_get_dsbuildmode_options(),
+      '#default_value' => isset( $settings[ 'dsbuildmode' ] ) ? $settings[ 'dsbuildmode' ] : 1,
+    );
+  }
+  return $form;
+}
+
+/**
+ * FAPI #element_validate callback for the nodereference_autocomplete widget.
+ *
+ * This function doesn't actually validate, it just reformats form_state value
+ * into an array of a suitable format for nodereference module
+ */
+function nodereference_dsauto_autocomplete_validate($element, &$form_state) {
+  form_set_value($element, array($form_state['values'][$element['#field_name']]), $form_state);
+}
+
+/**
+ * Element validation function that makes title required when creating a link.
+ */
+function nodereference_dsauto_node_link_validate($element, &$form_state) {
+  $link_settings = $form_state['values']['node_link'];
+  if (($link_settings['teaser'] || $link_settings['full']) && empty($link_settings['title'])) {
+    form_error($element['title'], t('A link title must be specified if creating links on referenceable content.'));
+  }
+}
+
+/**
+ * Implements hook_widget().
+ */
+function nodereference_dsauto_widget(&$form, &$form_state, $field, $items, $delta = 0) {
+  drupal_add_js( drupal_get_path( 'module', 'nodereference_dsauto' ) . '/js/nodereference_dsauto.js', 'module', 'footer' );
+  drupal_add_css( drupal_get_path( 'module', 'nodereference_dsauto' ) . '/css/nodereference_dsauto.css' );
+
+  $element = array('#tree' => TRUE);
+  $field_name = $field['field_name'];
+  $field_name_url = preg_replace('/^field_/', '', $field_name);
+  $referenced_nid = NULL;
+  $displaySuiteCallbackURLName = check_plain( $field_name ) . '-' . ( $delta ? check_plain( $delta ) : '0' ) . '-displaysuite-callback-url';
+  $displaySuiteCallbackURLValue = url( 'nodereference_dsauto_dscallback', array( 'absolute' => TRUE ) );
+  $displaySuiteInputName = check_plain( $field_name ) . '-' . ( $delta ? check_plain( $delta ) : '0' ) . '-displaysuite-name';
+  $displaySuiteInputValue = check_plain( $field[ 'widget' ][ 'dsbuildmode' ] );
+  $displaySuiteInput = '<input type="hidden" class="display_suite_input" name="' . $displaySuiteInputName . '" value="' . $displaySuiteInputValue . '" />';
+  $displaySuiteCallbackURL = '<input type="hidden" class="display_suite_callback_url" name="' . $displaySuiteCallbackURLName . '" value="' . $displaySuiteCallbackURLValue . '" />';
+  $displaySuiteReplacement = '<div class="display_suite_replacement"></div>';
+
+  $element = array(
+    '#type' => 'nodereference_autocomplete',
+    '#default_value' => isset($items[$delta]) ? $items[$delta] : NULL,
+    '#value_callback' => 'nodereference_autocomplete_value',
+    '#element_validate' => array('nodereference_dsauto_autocomplete_validate'),
+    '#attributes' => array( 'class' => 'nodereference_dsauto22' ),
+    '#prefix' => '<div class="nodereference_dsauto_div">' . $displaySuiteReplacement . $displaySuiteCallbackURL . $displaySuiteInput,
+    '#suffix' => '</div>',
+  );
+
+  return $element;
+}
+
+/**
+ * Process an individual element.
+ *
+ * Build the form element. When creating a form using FAPI #process,
+ * note that $element['#value'] is already set.
+ */
+function _nodereference_dsauto_process($element, $edit, $form_state, $form) {
+  if (isset($element['#value']) && is_numeric($element['#value']) && ($node = node_load($element['#value']))) {
+    $element['#display_title'] = check_plain($node->title);
+  }
+  else {
+    $element['#display_title'] = t('Referenced content not found.');
+  }
+
+  $element['nid'] = array(
+    '#type' => 'value',
+    '#value' => isset($element['#value']) ? $element['#value'] : $element['#value'],
+    '#parents' => $element['#parents'],
+  );
+
+  return $element;
+}
+
+/**
+ * An #after_build function used to add an empty value to the list of options.
+ *
+ * Normally CCK would do this in optionwidgets_options(), but since the widget
+ * type "nodereference_dsauto" isn't known by it, we have to add it manually.
+ */
+function _nodereference_dsauto_process_select($element, $form_state) {
+  if (isset($element['nid']['nid']['#options'])) {
+    $field = content_fields($element['#field_name'], $element['#type_name']);
+    $field['widget']['type'] = 'optionwidgets_select';
+    $element['nid']['nid']['#options'] = array('' => theme('optionwidgets_none', $field)) + $element['nid']['nid']['#options'];
+  }
+
+  return $element;
+}
+
+/**
+ * Check the current URL and pull the referenced node from it.
+ */
+function nodereference_dsauto_get_nid($field_name) {
+  $add_urls = variable_get('nodereference_dsauto_paths', array('node/add/%type/%nid'));
+  $field_name_url = preg_replace('/^field_/', '', $field_name);
+  $referenced_nid = NULL;
+
+  foreach ($add_urls as $url) {
+    $args = explode('/', $url);
+    foreach ($args as $part => $arg) {
+      // Set the target NID if matching on this part of the URL.
+      if ($arg == '%nid') {
+        $referenced_nid = arg($part);
+      }
+      // Set the target NID based on the field name, allowing for multiple
+      // references in the same URL.
+      elseif ($arg == '%' . $field_name_url) {
+        $referenced_nid = arg($part);
+      }
+      // Skip any other wildcards in the URL.
+      elseif (strpos($arg, '%') === 0) {
+        continue;
+      }
+      // Arguments must line up exactly if they're not a wildcard.
+      elseif (arg($part) != $arg) {
+        $referenced_nid = FALSE;
+        break;
+      }
+    }
+
+    if ($referenced_nid) {
+      break;
+    }
+  }
+
+  return $referenced_nid;
+}
+
+/**
+ * FAPI theme for an individual elements.
+ *
+ * This theme function controls the display of the widget when an existing item
+ * is being referenced.
+ *
+ * $element['#display_title'] contains the title of the item being referenced.
+ * $element['#field_name'] contains the field name.
+ * $element['#delta]  is the position of this element in the group.
+ */
+function theme_nodereference_dsauto($element) {
+  return theme('form_element', $element, $element['#display_title']);
+}
