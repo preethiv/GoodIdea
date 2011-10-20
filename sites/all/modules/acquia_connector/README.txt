@@ -1,4 +1,4 @@
-Acquia Network Connector modules Nantha
+Acquia Network Connector modules Nantha nantha
 ================================================================================
 
 The Acquia Network [1] enhances the Drupal experience by providing the support
